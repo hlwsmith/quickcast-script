@@ -5,7 +5,7 @@
 # rename this to .quickcast_keys in your home directory.
 
 # twich.tv just uses one key
-TWITCHKEY=XXXXXXXX_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWITCHKEY=live_XXXXXXXX_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # With youtube you can preconfigure different streams which are given 
 # names you can use over again, and static keys. 

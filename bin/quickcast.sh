@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# if a special ffmpeg is needed and toher variables
+PROGNAME="quickcast.sh"
+VERSION="0.1.0alpha"
+
+KEYFILE=".quickcast_keys"
+# if a special ffmpeg is needed and other variables
 #FFMPEG="ffmpeg -loglevel warning"
 FFMPEG="ffmpeg -y -loglevel info"
 WEBCAM=/dev/video0
@@ -9,26 +13,35 @@ SAVEDIR=${HOME}/streamcasts
 # default local filename prefixes
 OUTPREFIX=livecast
 OUTFILE=${SAVEDIR}/${OUTPREFIX}_${DATE}.mkv
-source .quickcast_keys
+#TWITCH_BANDWIDTH="-maxrate 650k -bufsize 650k"
+BANDWIDTH="650"
+#YOUTUBE_BANDWIDTH="-maxrate 600k -bufsize 1800k"
+# VCODEC_PRESET for live streaming. local uses static higher quality
+#VCODEC_PRESET="-preset medium"
+# -crf 28 
+
+source "${KEYFILE}"
 
 USAGE="
-USAGE: livecast [options] <stream_type>
+USAGE: ${PROGNAME} [options] <stream_type>
   Options:
       -h
           Output this help
       -b <Audio bitrate>
           The bitrate for the aac audio codec in kbps. 
-          The default is 32**<number of channels> for Twitch streams 
+          The default is 48*<number of channels> for Twitch streams 
           and 64*<number of channels> for everything else. 
       -c <Audio_channels>
           The number of audio channels 1 (mono) or 2 (stereo.)
            The default is 1 for Twitch streams and 2 for everthing else.
-      -f <filename>
-          Record local copy to <filename> 
-          Defaults to  ${OUTPREFIX}_<date_string>.mkv
-          This only setting only applies to YouTube streams. 
-          Twitch streams aren't saved locally and the others are always 
-          saved locally.
+      -C <CBR>
+          The 'constant bit rate' setting for the video in kbps. Note that 
+          this is not true CBR, the encoder will attempt to gravitate toward 
+          this setting though. This only makes sense for Twitch.tv streams
+          since they seem to insist on this non-sense. If omitted then mode
+          is not used, just the maxrate setting, (See -M) which is what they 
+          really want I think, even if they don't want to admit it). 
+          This overides the -M setting.
       -g <size>
           Sets the screen grab capture dimensions of the form WIDTHxHEIGHT
           If omitted it is selected interactively via clicking on the 
@@ -37,33 +50,59 @@ USAGE: livecast [options] <stream_type>
       -i <size>
           Size of the input video from the webcam, one of:
             160x120 176x144 352x288 432x240 640x360 864x480 1280x720
-          The first three are more square-ish (qqvga, qcif cif), for insets.
+          The first 3 are more square-ish (qqvga, qcif cif), good for insets.
           The others are 16x9 (or almost).  If omitted the webcam is not 
-          used for Twitch streams or Screen captures and output size 
+          used for Twitch streams or Screen captures and the output size 
           is used for everthing else.
+      -K <streaming-key>
+          The streaming key to use for the YouTube or Twitch stream 
+          (the option is ignored otherwise.) By default the proper key 
+          is selected from ${KEYFILE}
+      -M <max-bitrate>
+          The max bitrate of the video encoder in kbps, the default depends 
+          on the stream type. (around 600 for YouTube and Twitch streams)
+          Remember to add the audio bitrate to this if you want to determine 
+          what the final bitrate will be. Overridden by the -C setting
       -o <output_height> 
           Sets the output height, where <output_height> is one of:
              240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
-          All are hardcoded 16x9 (except 240p and 480p which are almost 16x9)
-          240p, 360p 480p and 720p could be used to live stream to YouTube.
+          All are hardcoded ~16x9.  240p, 360p 480p and 720p could be 
+          used to live stream to YouTube.
           This overrides any -s option, since they clash.
-          If neither -s or -o options are given the default depends are:
+          If neither -s or -o options are given the defaults are:
           720p for 'camcap', 360p for 'youtube', 1080p for 'screencap'
           and 504 for the 'twitch' and 'twitchcam' streams.
+      -Q <quality-preset>
+          One of ultrafast, superfast, veryfast, faster, fast, medium, 
+          slow, slower, veryslow. The default epends on the stream type.
+          faster is easier on the CPU for a given bitrate although the 
+          result will be lower quality. If the fps isn't keeping up with
+          the desired number either increase the preset speed or lower 
+          the video size.
       -r <vrate>
           The video frame rate. If omitted defaults depends on the output
           video size configuration.
       -s <scaled_height>
           Scales the screen grab (or webcam) width and height and scales 
-          them down to fit into <height> (maintianing the ratio) and sets 
+          them down to fit into <height> (maintaining the ratio) and sets 
           the resulting dimensions as the output size. Therefor the output
           likely wont be a neat 16x9 or other common video size ratio.
           Overriden by the -o setting, since they clash.
       -t
-          Test run, does not stream, instead saves to: 
-            test_<stream_name>.f4v
+          Test run, does not stream, instead saves what would have been 
+          streamed to:  test_<stream_name>.f4v
+      -T <tune-settings> NOT IMPLEMENTED
+          x264 'tune' setting to use. Default depends on the stream type.
+          film, animation or zerolatency are the obvious choices, 
+          however best to omit unless you are sure.
+      -U <rtmp://example.com/path>
+          Overrides the URL for streaming to YouTube or Twitch, otherwise 
+          the applicable one found in ${KEYFILE} is used.
+          eg: -U rtmp://a.rtmp.youtube.com/live2
       -v <v4l2_capture_device>
           If omitted ${WEBCAM} is used.
+      -V 
+          Print the program's version number and exit.
       -x <X offset>
           The X offset from the left side of the screen of left edge 
           of the screen grab area. If omitted it is selected interactively 
@@ -89,6 +128,7 @@ set_this_wh ()
 }
 
 set_cam_dimensions ()
+# not currently being used
 {
     set_this_wh $1
     v4l2-ctl --set-fmt-video=width=${THIS_W},height=${THIS_H},pixelformat=YUYV
@@ -96,7 +136,7 @@ set_cam_dimensions ()
 
 
 set_this ()
-# default requested
+# sets THIS to the REQUESTED value or the DEFAULT
 {
     DEFAULT=${1}
     REQUESTED=${2}
@@ -108,8 +148,8 @@ set_this ()
 }
 
 set_outsize ()
+# sets the the output dimensions from the height moniker
 {
-# 240p 360p 450 480p 504 540 576 720p 900 1008 and 1080
     case $1 in
 	240p)
 	    #or half of hd480? at 426x240?
@@ -125,7 +165,8 @@ set_outsize ()
 	    OUT_H=450
 	    ;; 
 	480p)
-	    # the 864x480 my logitech cam does? or 852x480 that is hd480?
+	    # Using the 864x480 my logitech cam does. 
+	    # Maybe should use 'hd480' (852x480) though?
 	    OUT_W=864
 	    OUT_H=480
 	    ;;
@@ -138,12 +179,14 @@ set_outsize ()
 	    OUT_H=540
 	    ;; 
 	576) 
-	    # a logitech cam size
+	    # Another 16x9 logitech cam size
+	    # Given my current set up this is probably the largest I should 
+	    # even think about streaming to twitch
 	    OUT_W=1024
 	    OUT_H=576
 	    ;; 
 	720p) 
-	    # aka hd720
+	    # aka hd720. My logitech cam can only do 10fps at this size
 	    OUT_W=1280
 	    OUT_H=720
 	    ;;
@@ -183,8 +226,12 @@ set_scale ()
     NEW_W=$(echo ${OLD_W}*${NEW_H} / ${OLD_H} | bc)
 }
 
-while getopts ":hb:c:f:g:i:o:r:s:tv:x:y:" opt; do
+while getopts ":Vhb:c:C:f:g:i:K:M:o:r:s:tU:v:x:y:" opt; do
     case $opt in
+	V)
+	    echo "${PROGNAME} ${VERSION}"
+	    exit 0
+	    ;;
 	h)
 	    echo "$USAGE" 
 	    echo "Current list of configured stream names:"
@@ -201,9 +248,8 @@ while getopts ":hb:c:f:g:i:o:r:s:tv:x:y:" opt; do
 	c)
 	    AC=$OPTARG
 	    ;;
-	f)
-	    OUTFILE=$OPTARG
-	    echo "Recording to file $OUTFILE" 
+	C)
+	    CBR=$OPTARG
 	    ;;
 	g)
 	    GRABSIZE=$OPTARG
@@ -211,14 +257,23 @@ while getopts ":hb:c:f:g:i:o:r:s:tv:x:y:" opt; do
 	    GRAB_W=$THIS_W
 	    GRAB_H=$THIS_H
 	    ;;
+        K)
+	    KEY=$OPTARG
+	    ;;
 	i)
 	    INSIZE=$OPTARG
 	    set_this_wh $OPTARG
 	    CAM_W=$THIS_W
 	    CAM_H=$THIS_H
 	    ;;
+	M)
+	    MAXRATE=$OPTARG
+	    ;;
 	o)
 	    OUTSIZE=$OPTARG
+	    ;;
+        Q)
+	    QUALITY=$OPTARG
 	    ;;
 	r)
 	    FRATE=$OPTARG
@@ -239,6 +294,13 @@ while getopts ":hb:c:f:g:i:o:r:s:tv:x:y:" opt; do
 	t)
 	    TEST=True
 	    echo "Running in test mode"
+	    ;;
+	T)
+	    # not in use
+	    TUNE=$OPTARG
+	    ;;
+	U)
+	    URL=$OPTARG
 	    ;;
 	v)
 	    WEBCAM=$OPTARG
@@ -268,7 +330,7 @@ get_windowinfo ()
     THIS_H=$2
     THIS_X=$3
     THIS_Y=$4
-    echo "Got window info ${THIS_W}x${THIS_H} : ${X},${Y}"
+    #echo "Got window info ${THIS_W}x${THIS_H} : ${X},${Y}"
 }
 
 # get the size of the root window
@@ -335,15 +397,15 @@ do_youtube ()
     read -p "Hit any key to continue."
     echo " -- Type q to quit.-- "
     if [ "${CAM_W}x${CAM_H}" == "${OUT_W}x${OUT_H}" ] ; then
-	VOPTS="-preset veryfast "
+	VSIZE=""
     else
-	VOPTS="-s ${OUT_W}x${OUT_H} -preset veryfast "
+	VSIZE="-s ${OUT_W}x${OUT_H}"
     fi
-    let GOP=(VRATE*2)-2
+    let GOP=(VRATE*2)
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
-    VCODEC="-c:v libx264 ${VOPTS} -maxrate 560k -bufsize 2240k"
+    VCODEC="-c:v libx264 ${VSIZE} ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTFILE="${SAVEDIR}/${FILE}"
     if [ "$TEST" ] ; then 
@@ -351,7 +413,7 @@ do_youtube ()
 	echo "    ${SAVEDIR}/test_${NAME}.f4v"
 	OUTPUT="${OUTFILE}|[f=flv]${SAVEDIR}/test_${NAME}.f4v"
     else 
-	OUTPUT="${OUTFILE}|[f=flv]rtmp://a.rtmp.youtube.com/live2/${KEY}"
+	OUTPUT="${OUTFILE}|[f=flv]${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} -pix_fmt yuv420p -g ${GOP} \
@@ -375,9 +437,11 @@ do_screencap ()
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
+    #SOUND="-f alsa -ar 44100 -ac ${AC} -i pulse"
+    #MONITOR="-f alsa -ar 44100 -ac ${AC} -i pulse"
     SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
     ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 -preset fast -maxrate 1000k -bufsize 1000k"
+    VCODEC="-c:v libx264 -preset ultrafast -qp 0"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
@@ -401,19 +465,25 @@ do_twitch ()
     echo
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
-    let GOP=VRATE*2-2
+    # An effort to no go over 2 sec keyframes that Twitch complains about
+    # divide by 1 to make it an integer, setting GOP to VRATE*2 still
+    # resulted in twitch complaining about max key intervals  being 
+    # 3 seconds or more!
+    GOP=$(echo "(${VRATE}*1.33)/1" | bc)
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
     SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
     ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 -preset fast -maxrate 540k -bufsize 1080k"
+    VCODEC="-c:v libx264 ${QUALITY} ${BRATE}"
+    # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTFMT="-f flv" 
     if [ "$TEST" ] ; then 
-	echo "Saving to test stream file: ${SAVEDIR}/test_${NAME}.f4v"
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
+	echo "Saving to test stream file: ${OUTPUT}"
     else 
-	OUTPUT="rtmp://live.twitch.tv/app/live_${TWITCHKEY}"
+	OUTPUT="${URL}/${KEY}"
+	echo "Streaming to Twitch.tv"
     fi
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
 	-filter:v "${FILTER}" \
@@ -443,7 +513,7 @@ do_twitchcam ()
     SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 -preset fast -maxrate 540k -bufsize 1080k"
+    VCODEC="-c:v libx264 ${QUALITY} ${BRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
     OUTFMT="-f flv"
@@ -451,7 +521,7 @@ do_twitchcam ()
 	echo "Saving to test stream file: ${SAVEDIR}/test_${NAME}.f4v"
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
     else 
-	OUTPUT="rtmp://live.twitch.tv/app/live_${TWITCHKEY}"
+	OUTPUT="${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} -f x11grab ${SCREEN} ${CAM} \
 	-filter_complex "${FILTER}" -map "[out]" -map 0:a \
@@ -516,6 +586,42 @@ case $1 in
 	VRATE=${THIS}
 	do_camcap
 	;;
+    screencap)
+	set_this 1 $AC
+	AC=${THIS}
+	let B=AC*64
+	set_this $B $AB
+	AB=${THIS}
+	if [ !$OUTSIZE ] ; then
+	    OUTSIZE=720p
+	fi
+	set_outsize $OUTSIZE
+	if [ ! "$GRAB_W" ] ; then
+	    do_grab
+	    GRAB_W=${THIS_W}
+	    GRAB_H=${THIS_H}
+	fi
+	if [ ! "$GRAB_X" ] ; then
+	    do_grab
+	    GRAB_X=${THIS_X}
+	    GRAB_Y=${THIS_Y}
+	fi
+	set_this 15 $FRATE
+	VRATE=${THIS}
+	do_screencap
+	;;
+    twitch*|youtube)
+	if [ ! "${QUALITY}" ] ; then
+	    QUALITY="-preset medium"
+	fi
+	if [ "${CBR}" ] ; then
+	    BRATE="-b:v ${CBR}k -minrate ${CBR}k -maxrate ${CBR}k -bufsize ${CBR}k" 
+	elif [ "${MAXRATE}" ] ; then
+	    BRATE="-maxrate ${MAXRATE}k -bufsize ${MAXRATE}k"
+	else
+	    BRATE="-maxrate ${BANDWIDTH}k -bufsize ${BANDWIDTH}k"
+	fi
+	;;&
     youtube)
 	set_this 2 $AC
 	AC=${THIS}
@@ -524,6 +630,9 @@ case $1 in
 	AB=${THIS}
 	if [ ! "$OUTSIZE" ] ; then
 	    $OUTSIZE=360p
+	fi
+	if [ ! "${URL}" ] ; then
+	    URL="${YOUTUBE_URL}"
 	fi
 	if [ ! "$KEY" ] ; then
 	    KEY=YOUTUBEKEY[$OUTSIZE]
@@ -550,38 +659,23 @@ case $1 in
 	VRATE=${THIS}
 	do_youtube
 	;;
-    screencap)
-	set_this 1 $AC
-	AC=${THIS}
-	let B=AC*64
-	set_this $B $AB
-	AB=${THIS}
-	if [ !$OUTSIZE ] ; then
-	    OUTSIZE=720p
-	fi
-	set_outsize $OUTSIZE
-	if [ ! "$GRAB_W" ] ; then
-	    do_grab
-	    GRAB_W=${THIS_W}
-	    GRAB_H=${THIS_H}
-	fi
-	if [ ! "$GRAB_X" ] ; then
-	    do_grab
-	    GRAB_X=${THIS_X}
-	    GRAB_Y=${THIS_Y}
-	fi
-	set_this 15 $FRATE
-	VRATE=${THIS}
-	do_screencap
-	;;
     twitch*)
-	KEY=${TWITCHKEY}
+	if [ ! "${URL}" ] ; then
+	    URL="${TWITCH_URL}"
+	fi
+	if [ ! "$KEY" ] ; then
+	    KEY="${TWITCHKEY}"
+	fi
+	if [ ! "$KEY" ] ; then
+	    echo "Key not found for twitch"
+	    exit 1
+	fi
 	set_this 1 $AC
 	AC=${THIS}
 	let B=AC*48
 	set_this $B $AB
 	AB=${THIS}
-	if [ !$OUTSIZE ] ; then
+	if [ ! "$OUTSIZE" ] ; then
 	    OUTSIZE=504
 	fi
 	set_outsize $OUTSIZE
