@@ -612,7 +612,7 @@ case $1 in
 	;;
     twitch*|youtube)
 	if [ ! "${QUALITY}" ] ; then
-	    QUALITY="-preset medium"
+	    QUALITY="-preset veryfast"
 	fi
 	if [ "${CBR}" ] ; then
 	    BRATE="-b:v ${CBR}k -minrate ${CBR}k -maxrate ${CBR}k -bufsize ${CBR}k" 
