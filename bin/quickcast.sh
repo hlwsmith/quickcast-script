@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.1.0alpha"
+VERSION="0.2.0alpha"
 
 KEYFILE=".quickcast_keys"
 # if a special ffmpeg is needed and other variables
