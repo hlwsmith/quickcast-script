@@ -3,13 +3,13 @@
 PROGNAME="quickcast.sh"
 VERSION="0.2.0alpha"
 
-KEYFILE=".quickcast_keys"
+KEYFILE="${HOME}/.quickcast_keys"
 # if a special ffmpeg is needed and other variables
 #FFMPEG="ffmpeg -loglevel warning"
 FFMPEG="ffmpeg -y -loglevel info"
 WEBCAM=/dev/video0
 DATE=`date +%Y-%m-%d_%H%M%S`
-SAVEDIR=${HOME}/streamcasts
+SAVEDIR=${HOME}/quickcasts
 # default local filename prefixes
 OUTPREFIX=livecast
 OUTFILE=${SAVEDIR}/${OUTPREFIX}_${DATE}.mkv
@@ -530,28 +530,42 @@ do_twitchcam ()
 	${OUTFMT} "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
 } 
 
-do_grab ()
+do_grabarea ()
 {
     echo "Click the mouse on the window you wish to capture" 
     WINDOWINFO=$(echo $(xwininfo| awk '/Corners|-geo/{print $2 }') | sed 's|+\([0-9]*\)+\([0-9]*\) \([0-9]*\)x\([0-9]*\).*|\3 \4 \1 \2|')
     get_windowinfo $WINDOWINFO
-    echo "Clicked window was ${THIS_W}x${THIS_H} "
-    echo "topleft corner at ${THIS_X},${THIS_Y}"
+    echo "Top-left corner at ${THIS_X},${THIS_Y}"
     read -p "Enter new WIDTHxHEIGHT and/or hit enter to continue. " NEW_WH
     if [ "$NEW_WH" ] ; then
 	set_this_wh $NEW_WH
     fi
-    read -p "Enter new X offset and/or hit enter to continue." NEW_X
+}
+
+do_grabxy ()
+{
+    echo "Clicked window was ${THIS_W}x${THIS_H} "
+    read -p "Enter new X,Y offset and/or hit enter to continue." NEW_X NEW_Y
     if [ "$NEW_X" ] ; then
-	echo "Got NEW X ${NEW_X}"
+	echo "Got NEW X,Y ${NEW_X},${NEW_Y}"
 	THIS_X="$NEW_X"
-    fi
-    read -p "Enter new Y offset and/or hit enter to continue." NEW_Y
-    if [ "$NEW_Y" ] ; then
-	echo "Got NEW Y ${NEW_Y}"
 	THIS_Y="$NEW_Y"
     fi
     check_size $THIS_X $THIS_Y
+}
+
+do_coordinates ()
+{
+    if [ ! "$GRAB_W" ] ; then
+	do_grabarea
+	GRAB_W=${THIS_W}
+	GRAB_H=${THIS_H}
+    fi
+    if [ ! "$GRAB_X" ] ; then
+	do_grabxy
+	GRAB_X=${THIS_X}
+	GRAB_Y=${THIS_Y}
+    fi
 }
 
 case $1 in
@@ -596,16 +610,7 @@ case $1 in
 	    OUTSIZE=720p
 	fi
 	set_outsize $OUTSIZE
-	if [ ! "$GRAB_W" ] ; then
-	    do_grab
-	    GRAB_W=${THIS_W}
-	    GRAB_H=${THIS_H}
-	fi
-	if [ ! "$GRAB_X" ] ; then
-	    do_grab
-	    GRAB_X=${THIS_X}
-	    GRAB_Y=${THIS_Y}
-	fi
+	do_coordinates
 	set_this 15 $FRATE
 	VRATE=${THIS}
 	do_screencap
@@ -679,18 +684,7 @@ case $1 in
 	    OUTSIZE=504
 	fi
 	set_outsize $OUTSIZE
-	if [ ! "$GRAB_W" ] ; then
-	    do_grab
-	    GRAB_W=${THIS_W}
-	    GRAB_H=${THIS_H}
-	    GRAB_X=${THIS_X}
-	    GRAB_Y=${THIS_Y}
-	fi
-	if [ ! "$GRAB_X" ] ; then
-	    do_grab
-	    GRAB_X=${THIS_X}
-	    GRAB_Y=${THIS_Y}
-	fi
+	do_coordinates
 	set_this 10 $FRATE
 	VRATE=${THIS}
 	;;&
