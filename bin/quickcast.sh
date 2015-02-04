@@ -391,7 +391,7 @@ do_youtube ()
     echo "        Cam: ${CAM_W}x${CAM_H} webcam"
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
     echo "      Audio: ${AC} channel(s) at ${AB}kbps"
-    echo "      Sream: to YouTube.com."
+    echo "      Stream: to YouTube.com."
     echo "       File: ${FILE}"
     echo 
     read -p "Hit any key to continue."
