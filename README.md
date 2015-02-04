@@ -65,7 +65,7 @@ also see: v4l2-ctl --list-formats-ext
 
 160x120 ‘qqvga’ 30
 
-320x240 qvga’ 30
+320x240 ‘qvga’ 30
 
 640x480 ‘vga’ 30
 
