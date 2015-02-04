@@ -1,14 +1,19 @@
-# bash source file, sourced by the quickcast.sh script 
-
-# Keys for live streaming sites obviously real keys should be kept
-# private and can't be posted on github.  Fill in with your real keys and
-# rename this to .quickcast_keys in your home directory.
+# This is a bash source file, sourced by the quickcast.sh script 
+#
+# This file is used for configuration, mostly for storing the secret
+# keys needed live streaming sites, such as twitch.tv or youtube.com.
+# Obviously real keys should be kept private (ie. don't post real keys
+# to gitgub or have the real version of file be world readable).  
+#
+# Fill tgis in with your real keys and rename this to .quickcast in
+# your home directory.
 
 # twich.tv just uses one key
 TWITCHKEY=live_XXXXXXXX_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # With youtube you can preconfigure different streams which are given 
-# names you can use over again, and static keys. 
+# names and static keys you can use over again. So in this example there 
+# are named streams 240p 360p and 480p, places into an array.
 declare -A YOUTUBEKEYS
 YOUTUBEKEYS[240p]=example.xxxx-xxxx-xxxx-xxxx
 YOUTUBEKEYS[360p]=example.yyyy-yyyy-yyyy-yyyy
