@@ -535,7 +535,7 @@ do_grabarea ()
     echo "Click the mouse on the window you wish to capture" 
     WINDOWINFO=$(echo $(xwininfo| awk '/Corners|-geo/{print $2 }') | sed 's|+\([0-9]*\)+\([0-9]*\) \([0-9]*\)x\([0-9]*\).*|\3 \4 \1 \2|')
     get_windowinfo $WINDOWINFO
-    echo "Top-left corner at ${THIS_X},${THIS_Y}"
+    echo "Clicked window was ${THIS_W}x${THIS_H} "
     read -p "Enter new WIDTHxHEIGHT and/or hit enter to continue. " NEW_WH
     if [ "$NEW_WH" ] ; then
 	set_this_wh $NEW_WH
@@ -544,7 +544,7 @@ do_grabarea ()
 
 do_grabxy ()
 {
-    echo "Clicked window was ${THIS_W}x${THIS_H} "
+    echo "Top-left corner at ${THIS_X},${THIS_Y}"
     read -p "Enter new X,Y offset and/or hit enter to continue." NEW_X NEW_Y
     if [ "$NEW_X" ] ; then
 	echo "Got NEW X,Y ${NEW_X},${NEW_Y}"
