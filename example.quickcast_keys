@@ -1,7 +1,7 @@
 # This is a bash source file, sourced by the quickcast.sh script 
 #
 # This file is used for configuration, mostly for storing the secret
-# keys needed live streaming sites, such as twitch.tv or youtube.com.
+# keys needed for live streaming sites, such as twitch.tv or youtube.com.
 # Obviously real keys should be kept private (ie. don't post real keys
 # to gitgub or have the real version of file be world readable).  
 #
