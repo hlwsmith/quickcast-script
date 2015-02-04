@@ -70,8 +70,8 @@ USAGE: ${PROGNAME} [options] <stream_type>
           used to live stream to YouTube.
           This overrides any -s option, since they clash.
           If neither -s or -o options are given the defaults are:
-          720p for 'camcap', 360p for 'youtube', 1080p for 'screencap'
-          and 504 for the 'twitch' and 'twitchcam' streams.
+          720p for 'camcap', 360p for 'youtube', 504 for the 'twitch' 
+          and 'twitchcam' streams. For 'screencap' in input sized is used.
       -Q <quality-preset>
           One of ultrafast, superfast, veryfast, faster, fast, medium, 
           slow, slower, veryslow. The default epends on the stream type.
@@ -607,9 +607,9 @@ case $1 in
 	set_this $B $AB
 	AB=${THIS}
 	if [ !$OUTSIZE ] ; then
-	    OUTSIZE=720p
+	    OUT_W=0
+	    OUT_H=0
 	fi
-	set_outsize $OUTSIZE
 	do_coordinates
 	set_this 15 $FRATE
 	VRATE=${THIS}
