@@ -343,17 +343,17 @@ check_size ()
 {
     let XTOT=${1}+CAP_XSIZE
     if [ $ROOTX -lt $XTOT ] ; then
-	echo "XTOT to big: ${XTOT}"
-	exit 1
+	let THIS_X=ROOTX-CAP_XSIZE
+	echo "XTOT to big at ${XTOT} adjusting X offest to ${THIS_X}"
     else
-	echo "X is good to go at ${XTOT}"
+	echo "XTOT is good to go at ${XTOT}"
     fi
     let YTOT=${2}+CAP_YSIZE
     if [ $ROOTY -lt $YTOT ] ; then
-	echo "YTOT to big: ${YTOT}"
-	exit 1
+	let THIS_Y=ROOTY-CAP_YSIZE
+	echo "YTOT to big at ${YTOT} adjusting Y offest to ${THIS_Y}"
     else
-	echo "Y is good to go at ${YTOT}"
+	echo "YTOT is good to go at ${YTOT}"
     fi
 }
 
