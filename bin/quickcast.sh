@@ -1,9 +1,9 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.2.0alpha"
+VERSION="0.3.0-alpha.1"
 
-KEYFILE="${HOME}/.quickcast_keys"
+KEYFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
 #FFMPEG="ffmpeg -loglevel warning"
 FFMPEG="ffmpeg -y -loglevel info"
