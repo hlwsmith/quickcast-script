@@ -317,7 +317,7 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:r:s:tU:v:x:y:" opt; do
 	    ;;
 	:)
 	    echo "Option -$OPTARG requires a argument."  >&2
-	    echo $USAGE 
+	    echo "$USAGE" 
 	    exit 1
 	    ;;
     esac
