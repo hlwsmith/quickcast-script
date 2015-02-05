@@ -13,7 +13,7 @@ TWITCHKEY=live_XXXXXXXX_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # With youtube you can preconfigure different streams which are given 
 # names and static keys you can use over again. So in this example there 
-# are named streams 240p 360p and 480p, places into an array.
+# are named streams 240 360 and 480, placed into an array.
 declare -A YOUTUBEKEYS
 YOUTUBEKEYS[240p]=example.xxxx-xxxx-xxxx-xxxx
 YOUTUBEKEYS[360p]=example.yyyy-yyyy-yyyy-yyyy
