@@ -391,7 +391,7 @@ do_youtube ()
     echo "        Cam: ${CAM_W}x${CAM_H} webcam"
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
     echo "      Audio: ${AC} channel(s) at ${AB}kbps"
-    echo "      Stream: to YouTube.com."
+    echo "      Stream: to YouTube.com. ${URL}/${KEY}"
     echo "       File: ${FILE}"
     echo 
     read -p "Hit any key to continue."
@@ -640,10 +640,10 @@ case $1 in
 	    URL="${YOUTUBE_URL}"
 	fi
 	if [ ! "$KEY" ] ; then
-	    KEY=YOUTUBEKEY[$OUTSIZE]
+	    KEY=${YOUTUBEKEYS[$OUTSIZE]}
 	fi
 	if [ ! "$KEY" ] ; then
-	    echo "You Tube Key not found for -o $OUTSIZE"
+	    echo "YouTube Key not found for -o $OUTSIZE"
 	    # let them input key a key here?
 	    exit 1
 	fi
@@ -699,7 +699,10 @@ case $1 in
 	do_twitchcam
 	;;
     *)
-	echo "No configured stream setup name given"  >&2
+	echo "No configured stream setup name given!"  >&2
+	echo "Available configurations are:" >&2
+	echo "  ${STREAM_TYPES}" >&2
+	echo "Example: ${PROGNAME} $(echo ${STREAM_TYPES} | awk '{print $1}')"
 	exit 1
 	;;
 esac
