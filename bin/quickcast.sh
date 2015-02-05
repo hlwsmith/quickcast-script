@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.3.0-alpha.1"
+VERSION="0.3.0-alpha.2"
 
 KEYFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -363,11 +363,12 @@ do_camcap ()
     OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
     echo 
-    echo "  Settings: "
+    echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam "
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
     echo "      Audio: ${AC} channel(s) at ${AB}kbps"
     echo "       File: ${OUTFILE}"
+    echo " --------------------- "
     echo 
     read -p "Hit any key to continue."
     echo " -- Type q to quit.-- "
@@ -387,13 +388,19 @@ do_youtube ()
     FILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
     echo 
-    echo "  Settings: "
+    echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam"
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
     echo "      Audio: ${AC} channel(s) at ${AB}kbps"
-    echo "      Stream: to YouTube.com. ${URL}/${KEY}"
-    echo "       File: ${FILE}"
-    echo 
+    if [ "$TEST" ] ; then 
+	echo "Saving to test stream file: "
+	echo "     ${SAVEDIR}/test_${NAME}.f4v"
+    else
+	echo "      Stream: ${URL}/${KEY}"
+    fi
+    echo " Local File: ${FILE}"
+    echo " --------------------- "
+    echo
     read -p "Hit any key to continue."
     echo " -- Type q to quit.-- "
     if [ "${CAM_W}x${CAM_H}" == "${OUT_W}x${OUT_H}" ] ; then
@@ -409,8 +416,6 @@ do_youtube ()
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTFILE="${SAVEDIR}/${FILE}"
     if [ "$TEST" ] ; then 
-	echo "Saving to test stream file: "
-	echo "    ${SAVEDIR}/test_${NAME}.f4v"
 	OUTPUT="${OUTFILE}|[f=flv]${SAVEDIR}/test_${NAME}.f4v"
     else 
 	OUTPUT="${OUTFILE}|[f=flv]${URL}/${KEY}"
@@ -428,11 +433,12 @@ do_screencap ()
     OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
     echo 
-    echo "  Settings: "
+    echo " --- Settings -------- "
     echo "      Screen: ${GRABAREA} at ${GRABXY} "
     echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
     echo "       Audio: ${AC} channel(s) at ${AB}kbps"
     echo "        File: ${OUTFILE}"
+    echo " --------------------- "
     echo
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
@@ -457,11 +463,17 @@ do_twitch ()
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
     echo 
-    echo "  Settings: "
+    echo " --- Settings -------- "
     echo "      Screen: ${GRABAREA} at ${GRABXY} "
     echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
-    echo "       Audio: ${AC} channel(s) at ${AB}kbps"
-    echo "      Stream: to Twitch.tv"
+    echo "       Audio: ${AC} channel(s) at ${AB}kbps" 
+    if [ "$TEST" ] ; then 
+	echo "Saving to test stream file: "
+	echo "     ${SAVEDIR}/test_${NAME}.f4v"
+    else
+	echo "      Stream: ${URL}/${KEY}"
+    fi
+    echo " --------------------- "
     echo
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
@@ -480,10 +492,8 @@ do_twitch ()
     OUTFMT="-f flv" 
     if [ "$TEST" ] ; then 
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
-	echo "Saving to test stream file: ${OUTPUT}"
     else 
 	OUTPUT="${URL}/${KEY}"
-	echo "Streaming to Twitch.tv"
     fi
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
 	-filter:v "${FILTER}" \
@@ -499,12 +509,13 @@ do_twitchcam ()
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
     echo 
-    echo "  Settings: "
+    echo " --- Settings -------- "
     echo "      Screen: ${GRABAREA} at ${GRABXY} "
     echo "      webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
     echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
     echo "       Audio: ${AC} channel(s) at ${AB}kbps"
     echo "      Stream: to Twitch.tv"
+    echo " --------------------- "
     echo
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
