@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.3.0-alpha.3"
+VERSION="0.3.1-alpha.0"
 
 KEYFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -66,10 +66,10 @@ USAGE: ${PROGNAME} [options] <stream_type>
       -o <output_height> 
           Sets the output height, where <output_height> is one of:
              240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
-          All are hardcoded ~16x9.  240p, 360p 480p and 720p could be 
-          used to live stream to YouTube.
-          This overrides any -s option, since they clash.
-          If neither -s or -o options are given the defaults are:
+          The width will then be set to a hardcoded (~16x9) dimension 
+          unless the -s option is used (See below).
+          240p, 360p 480p and 720p could be used to live stream to YouTube.
+          The defaults are:
           720p for 'camcap', 360p for 'youtube', 504 for the 'twitch' 
           and 'twitchcam' streams. For 'screencap' in input sized is used.
       -Q <quality-preset>
@@ -82,12 +82,12 @@ USAGE: ${PROGNAME} [options] <stream_type>
       -r <vrate>
           The video frame rate. If omitted defaults depends on the output
           video size configuration.
-      -s <scaled_height>
-          Scales the screen grab (or webcam) width and height and scales 
-          them down to fit into <height> (maintaining the ratio) and sets 
-          the resulting dimensions as the output size. Therefor the output
-          likely wont be a neat 16x9 or other common video size ratio.
-          Overriden by the -o setting, since they clash.
+      -s 
+          Scales the screen grab (or webcam) width to the output height (-o)
+          maintaining the same ration as the input. Without this option a 
+          standard (~16x9-ish) width will be used, potentially stretching 
+          or shrinking the width dimension if the original (cam or grab area) 
+          was not also in 16x9.
       -t
           Test run, does not stream, instead saves what would have been 
           streamed to:  test_<stream_name>.f4v
@@ -218,7 +218,7 @@ set_scale ()
     NEW_H=$1
     OLD_W=$2
     OLD_H=$3
-    if [ ${NEW_H} -gt ${OLD_H} ] ; then
+    if [ "${NEW_H}" -gt "${OLD_H}" ] ; then
 	echo "Scaled height (${NEW_H}) must not be larger then "
 	echo "the original (${OLD_H})" >&2
 	exit 1
@@ -226,7 +226,7 @@ set_scale ()
     NEW_W=$(echo ${OLD_W}*${NEW_H} / ${OLD_H} | bc)
 }
 
-while getopts ":Vhb:c:C:f:g:i:K:M:o:r:s:tU:v:x:y:" opt; do
+while getopts ":Vhb:c:C:f:g:i:K:M:o:r:stU:v:x:y:" opt; do
     case $opt in
 	V)
 	    echo "${PROGNAME} ${VERSION}"
@@ -279,17 +279,7 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:r:s:tU:v:x:y:" opt; do
 	    FRATE=$OPTARG
 	    ;;
 	s)
-	    SCALETO=$OPTARG
-	    if [ "$OUTSIZE" ] ; then
-		echo "ignoring -s $OPTARG, -o $OUTSIZE is already set." >&2
-	    elif [ "$GRAB_H" ] ; then
-		set_scale ${OPTARG} ${GRAB_W} ${GRAB_H}
-	    else
-		set_scale ${OPTARG} ${CAM_W} ${CAM_H}
-	    fi
-	    WIDTH=$NEW_W
-	    HEIGHT=$NEW_H
-	    #scale=$SCALETO:force_original_aspect_ratio=decrease
+	    SCALE=True
 	    ;;
 	t)
 	    TEST=True
@@ -594,16 +584,19 @@ case $1 in
 	if [ !$CAM_W ] ; then
 	    CAM_W=$OUT_W
 	    CAM_H=$OUT_H
+	elif [ "$SCALE" ] ; then
+	    set_scale $OUT_H $CAM_W $CAM_H
+	    OUT_W=$NEW_W
 	fi
-	if [ $CAM_H -eq 480 ] ; then
+	if [ "$CAM_H" -eq 480 ] ; then
 	    set_this 24 $FRATE
-	elif [ $CAM_H -eq 600 ] ; then
+	elif [ "$CAM_H" -eq 600 ] ; then
 	    set_this 24 $FRATE
-	elif [ $CAM_H -lt 480 ] ; then
+	elif [ "$CAM_H" -lt 480 ] ; then
 	    set_this 30 $FRATE
-	elif [ $CAM_H -lt 720 ] ; then
+	elif [ "$CAM_H" -lt 720 ] ; then
 	    set_this 15 $FRATE
-	elif [ $CAM_H -gt 720 ] ; then
+	elif [ "$CAM_H" -gt 720 ] ; then
 	    set_this 5 $FRATE
 	else 
 	    set_this 10 $FRATE
@@ -617,11 +610,17 @@ case $1 in
 	let B=AC*64
 	set_this $B $AB
 	AB=${THIS}
-	if [ !$OUTSIZE ] ; then
-	    OUT_W=0
-	    OUT_H=0
-	fi
 	do_coordinates
+	if [ ! "$OUTSIZE" ] ; then
+	    OUT_W=${GRAB_W}
+	    OUT_H=${GRAB_H}
+	else
+	    set_outsize $OUTSIZE
+	fi
+	if [ "$SCALE" ] ; then
+	    set_scale $OUT_H $GRAB_W $GRAB_H
+	    OUT_W=$NEW_W
+	fi
 	set_this 15 $FRATE
 	VRATE=${THIS}
 	do_screencap
