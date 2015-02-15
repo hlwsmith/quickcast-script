@@ -504,7 +504,12 @@ do_twitchcam ()
     echo "      webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
     echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
     echo "       Audio: ${AC} channel(s) at ${AB}kbps"
-    echo "      Stream: to Twitch.tv"
+    if [ "$TEST" ] ; then 
+	echo "Saving to test stream file: "
+	echo "     ${SAVEDIR}/test_${NAME}.f4v"
+    else
+	echo "      Stream: ${URL}/${KEY}"
+    fi
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
@@ -644,7 +649,7 @@ case $1 in
 	set_this $B $AB
 	AB=${THIS}
 	if [ ! "$OUTSIZE" ] ; then
-	    $OUTSIZE=360p
+	    OUTSIZE=360p
 	fi
 	if [ ! "${URL}" ] ; then
 	    URL="${YOUTUBE_URL}"
