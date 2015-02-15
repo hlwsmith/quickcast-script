@@ -1,9 +1,9 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.3.1-alpha.0"
+VERSION="0.3.1-alpha.1"
 
-KEYFILE="${HOME}/.quickcast"
+CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
 #FFMPEG="ffmpeg -loglevel warning"
 FFMPEG="ffmpeg -y -loglevel info"
@@ -11,8 +11,8 @@ WEBCAM=/dev/video0
 DATE=`date +%Y-%m-%d_%H%M%S`
 SAVEDIR=${HOME}/quickcasts
 # default local filename prefixes
-OUTPREFIX=livecast
-OUTFILE=${SAVEDIR}/${OUTPREFIX}_${DATE}.mkv
+#OUTPREFIX=livecast
+#OUTFILE=${SAVEDIR}/${OUTPREFIX}_${DATE}.mkv
 #TWITCH_BANDWIDTH="-maxrate 650k -bufsize 650k"
 BANDWIDTH="650"
 #YOUTUBE_BANDWIDTH="-maxrate 600k -bufsize 1800k"
@@ -20,7 +20,7 @@ BANDWIDTH="650"
 #VCODEC_PRESET="-preset medium"
 # -crf 28 
 
-source "${KEYFILE}"
+source "${CONFIGFILE}"
 
 USAGE="
 USAGE: ${PROGNAME} [options] <stream_type>
@@ -57,7 +57,7 @@ USAGE: ${PROGNAME} [options] <stream_type>
       -K <streaming-key>
           The streaming key to use for the YouTube or Twitch stream 
           (the option is ignored otherwise.) By default the proper key 
-          is selected from ${KEYFILE}
+          is selected from ${CONFIGFILE}
       -M <max-bitrate>
           The max bitrate of the video encoder in kbps, the default depends 
           on the stream type. (around 600 for YouTube and Twitch streams)
@@ -97,7 +97,7 @@ USAGE: ${PROGNAME} [options] <stream_type>
           however best to omit unless you are sure.
       -U <rtmp://example.com/path>
           Overrides the URL for streaming to YouTube or Twitch, otherwise 
-          the applicable one found in ${KEYFILE} is used.
+          the applicable one found in ${CONFIGFILE} is used.
           eg: -U rtmp://a.rtmp.youtube.com/live2
       -v <v4l2_capture_device>
           If omitted ${WEBCAM} is used.
