@@ -363,7 +363,7 @@ do_camcap ()
 do_youtube () 
 {
     NAME="youtube"
-    FILE="${NAME}_${DATE}.mkv"
+    OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
@@ -376,7 +376,7 @@ do_youtube ()
     else
 	echo "      Stream: ${URL}/${KEY}"
     fi
-    echo " Local File: ${FILE}"
+    echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
@@ -392,11 +392,11 @@ do_youtube ()
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
     VCODEC="-c:v libx264 ${VSIZE} ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
-    OUTFILE="${SAVEDIR}/${FILE}"
+    OUTPUT="${SAVEDIR}/${OUTFILE}"
     if [ "$TEST" ] ; then 
-	OUTPUT="${OUTFILE}|[f=flv]${SAVEDIR}/test_${NAME}.f4v"
+	OUTPUT="${SAVEDIR}/${OUTFILE}|[f=flv]${SAVEDIR}/test_${NAME}.f4v"
     else 
-	OUTPUT="${OUTFILE}|[f=flv]${URL}/${KEY}"
+	OUTOUT="${SAVEDIR}/${OUTFILE}|[f=flv]${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} -pix_fmt yuv420p -g ${GOP} \
