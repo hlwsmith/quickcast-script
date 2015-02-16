@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.3.1-alpha.1"
+VERSION="0.4.1-alpha.0-whiptail"
 
 CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -38,7 +38,7 @@ USAGE: ${PROGNAME} [options] <stream_type>
           no screen is grabbed for everythihg else. 
       -i <size>
           Size of the input video from the webcam, one of:
-            160x120 176x144 352x288 432x240 640x360 864x480 1280x720
+            160x120 176x144 352x288 432x240 640x360 864x480 1024x576 1280x720
           The first 3 are more square-ish (qqvga, qcif cif), good for insets.
           The others are 16x9 (or almost).  If omitted the webcam is not 
           used for Twitch streams or Screen captures and the output size 
@@ -250,7 +250,6 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:r:stU:v:x:y:" opt; do
 	    KEY=$OPTARG
 	    ;;
 	i)
-	    INSIZE=$OPTARG
 	    set_this_wh $OPTARG
 	    CAM_W=$THIS_W
 	    CAM_H=$THIS_H
@@ -563,7 +562,55 @@ do_coordinates ()
     fi
 }
 
-case $1 in
+
+if [ ! $1 ]; then
+    STREAM_TYPE=$(whiptail --title "Select a Stream Type" --radiolist \
+	"Choose a Stream Type from the list:" 12 72 5 \
+	"camcap" "Capture the webcam and save locally " ON \
+	"youtube" "Like camcap also streaming to YouTube.com " OFF \
+	"screencap" "Screen grab and save locally " OFF \
+	"twitch" "Like screencap also streaming to Twitch.tv " OFF \
+	"twitchcam" "Like twitch with webcam inset at lower left " OFF 3>&1 1>&2 2>&3)
+else
+    STREAM_TYPE=${1}
+fi
+
+function query_webcam ()
+# 160x120 176x144 352x288 432x240 640x360 864x480 1280x720
+{
+    if INSIZE=$(whiptail --title "Input Video Dimensions" \
+	--nocancel --radiolist \
+	"Choose dimensions for the video camera:" 15 60 8 \
+	"160x120" "160x120 qqvga -- max fps 30" OFF \
+	"176x144" "176x144 qcif -- max fps 30" OFF \
+	"352x288" "352x288 cif -- max fps 30" OFF \
+	"432x240" "432x240 -- max fps 30" OFF \
+	"640x360" "640x360 -- max fps 30" ON \
+	"864x480" "864x480 -- max fps 24" OFF \
+	"1024x576" "1024x576 -- max fps 15" OFF \
+	"1280x720" "1280x720 -- max fps 10" OFF 3>&1 1>&2 2>&3); 
+    then
+	set_this_wh $INSIZE
+	CAM_W=$THIS_W
+	CAM_H=$THIS_H
+    fi
+}
+
+function query_outsize() {
+# for YouTube 240p 360p 480p 720p
+    if OUTSIZE=$(whiptail --title "Output Video Dimensions" \
+	--nocancel --radiolist \
+	"Choose dimensions for the streaming video:" 12 60 4 \
+	"240p" "432x240 -- fps 24" OFF \
+	"360p" "640x360 -- fps 24" ON \
+	"480p" "864x480 -- fps 24" OFF \
+	"720p" "1280x720 -- fps 10" OFF 3>&1 1>&2 2>&3); 
+    then
+	set_outsize $OUTSIZE
+    fi
+}
+
+case ${STREAM_TYPE} in
 # camcap youtube screencap twitch twitchcam 
     camcap)
 	set_this 2 $AC
@@ -571,14 +618,16 @@ case $1 in
 	let B=AC*64
 	set_this $B $AB
 	AB=${THIS}
-	if [ ! "$OUTSIZE" ] ; then
-	    $OUTSIZE=360p
+	if [ ! "$CAM_W" ] ; then
+	    query_webcam
 	fi
-	set_outsize $OUTSIZE
-	if [ !$CAM_W ] ; then
-	    CAM_W=$OUT_W
-	    CAM_H=$OUT_H
-	elif [ "$SCALE" ] ; then
+	if [ "$OUTSIZE" ] ; then
+	    set_outsize $OUTSIZE
+	else
+	    OUT_W=$CAM_W
+	    OUT_H=$CAM_H
+	fi
+	if [ "$SCALE" ] ; then
 	    set_scale $OUT_H $CAM_W $CAM_H
 	    OUT_W=$NEW_W
 	fi
@@ -637,8 +686,13 @@ case $1 in
 	let B=AC*64
 	set_this $B $AB
 	AB=${THIS}
-	if [ ! "$OUTSIZE" ] ; then
-	    OUTSIZE=360p
+	if [ ! "$CAM_W" ] ; then
+	    query_webcam
+	fi
+	if [ "$OUTSIZE" ] ; then
+	    set_outsize $OUTSIZE
+	else
+	    query_outsize
 	fi
 	if [ ! "${URL}" ] ; then
 	    URL="${YOUTUBE_URL}"
@@ -651,15 +705,10 @@ case $1 in
 	    # let them input key a key here?
 	    exit 1
 	fi
-	set_outsize $OUTSIZE
-	if [ ! "$CAM_W" ] ; then
-	    CAM_W=$OUT_W
-	    CAM_H=$OUT_H
-	fi
 	if [ $CAM_H -eq 480 ] ; then
 	    set_this 24 $FRATE
 	elif [ $CAM_H -lt 480 ] ; then
-	    set_this 30 $FRATE
+	    set_this 24 $FRATE
 	elif [ $CAM_H -lt 720 ] ; then
 	    set_this 15 $FRATE
 	else 
