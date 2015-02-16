@@ -7,18 +7,7 @@ CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
 #FFMPEG="ffmpeg -loglevel warning"
 FFMPEG="ffmpeg -y -loglevel info"
-WEBCAM=/dev/video0
 DATE=`date +%Y-%m-%d_%H%M%S`
-SAVEDIR=${HOME}/quickcasts
-# default local filename prefixes
-#OUTPREFIX=livecast
-#OUTFILE=${SAVEDIR}/${OUTPREFIX}_${DATE}.mkv
-#TWITCH_BANDWIDTH="-maxrate 650k -bufsize 650k"
-BANDWIDTH="650"
-#YOUTUBE_BANDWIDTH="-maxrate 600k -bufsize 1800k"
-# VCODEC_PRESET for live streaming. local uses static higher quality
-#VCODEC_PRESET="-preset medium"
-# -crf 28 
 
 source "${CONFIGFILE}"
 

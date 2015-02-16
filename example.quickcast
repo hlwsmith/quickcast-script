@@ -18,3 +18,10 @@ declare -A YOUTUBEKEYS
 YOUTUBEKEYS[240p]=example.xxxx-xxxx-xxxx-xxxx
 YOUTUBEKEYS[360p]=example.yyyy-yyyy-yyyy-yyyy
 YOUTUBEKEYS[480p]=example.zzzz-zzzz-zzzz-zzzz
+
+
+# other configuration variables
+BANDWIDTH="650"
+WEBCAM=/dev/video0
+SAVEDIR=${HOME}/quickcasts
+
