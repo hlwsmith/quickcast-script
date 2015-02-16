@@ -539,12 +539,15 @@ do_grabarea ()
 do_grabxy ()
 {
     echo "Top-left corner at ${THIS_X},${THIS_Y}"
+    OLD_IFS="$IFS"
+    IFS="${IFS},"
     read -p "Enter new X,Y offset and/or hit enter to continue." NEW_X NEW_Y
     if [ "$NEW_X" ] ; then
 	echo "Got NEW X,Y ${NEW_X},${NEW_Y}"
 	THIS_X="$NEW_X"
 	THIS_Y="$NEW_Y"
     fi
+    IFS=${OLD_IFS}
     check_size $THIS_X $THIS_Y
 }
 
