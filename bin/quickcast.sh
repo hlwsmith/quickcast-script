@@ -354,7 +354,7 @@ do_camcap ()
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k "
-    VCODEC="-c:v libx264 -preset ultrafast -qp 0"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} \
@@ -391,7 +391,7 @@ do_youtube ()
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
-    VCODEC="-c:v libx264 ${VSIZE} ${QUALITY} ${BRATE}"
+    VCODEC="-c:v libx264 ${VSIZE} -preset ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     if [ "$TEST" ] ; then 
@@ -426,7 +426,7 @@ do_screencap ()
     #MONITOR="-f alsa -ar 44100 -ac ${AC} -i pulse"
     SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
     ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 -preset ultrafast -qp 0"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
@@ -464,7 +464,7 @@ do_twitch ()
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
     SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
     ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 ${QUALITY} ${BRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
@@ -508,7 +508,7 @@ do_twitchcam ()
     SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 ${QUALITY} ${BRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
     OUTFMT="-f flv"
@@ -569,6 +569,9 @@ do_coordinates ()
 case $1 in
 # camcap youtube screencap twitch twitchcam 
     camcap)
+	if [ ! "${QUALITY}" ] ; then
+	    QUALITY="faster"
+	fi
 	set_this 2 $AC
 	AC=${THIS}
 	let B=AC*64
@@ -602,6 +605,9 @@ case $1 in
 	do_camcap
 	;;
     screencap)
+	if [ ! "${QUALITY}" ] ; then
+	    QUALITY="faster"
+	fi
 	set_this 1 $AC
 	AC=${THIS}
 	let B=AC*64
@@ -624,7 +630,7 @@ case $1 in
 	;;
     twitch*|youtube)
 	if [ ! "${QUALITY}" ] ; then
-	    QUALITY="-preset veryfast"
+	    QUALITY="veryfast"
 	fi
 	if [ "${CBR}" ] ; then
 	    BRATE="-b:v ${CBR}k -minrate ${CBR}k -maxrate ${CBR}k -bufsize ${CBR}k" 
