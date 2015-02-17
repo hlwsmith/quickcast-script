@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.4.1-alpha.0-whiptail"
+VERSION="0.4.1-alpha.1-whiptail"
 
 CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -39,10 +39,11 @@ USAGE: ${PROGNAME} [options] <stream_type>
       -i <size>
           Size of the input video from the webcam, one of:
             160x120 176x144 352x288 432x240 640x360 864x480 1024x576 1280x720
-          The first 3 are more square-ish (qqvga, qcif cif), good for insets.
-          The others are 16x9 (or almost).  If omitted the webcam is not 
-          used for Twitch streams or Screen captures and the output size 
-          is used for everthing else.
+          The first 3 are more square-ish (qqvga, qcif cif), good for
+          insets.  The others are 16x9 (or almost).  If omitted
+          640x360 is used for camcap and screencap, 176x144 (qcif) is used
+          for the twitchcam inset and the remaining modes will not use 
+          the camera.
       -K <streaming-key>
           The streaming key to use for the YouTube or Twitch stream 
           (the option is ignored otherwise.) By default the proper key 
@@ -59,18 +60,19 @@ USAGE: ${PROGNAME} [options] <stream_type>
           unless the -s option is used (See below).
           240p, 360p 480p and 720p could be used to live stream to YouTube.
           The defaults are:
-          720p for 'camcap', 360p for 'youtube', 504 for the 'twitch' 
-          and 'twitchcam' streams. For 'screencap' in input sized is used.
+          360p for 'youtube', 504 for the 'twitch' and 'twitchcam'
+          streams. For 'screencap' and 'camcap' the input sized is
+          used.
       -Q <quality-preset>
           One of ultrafast, superfast, veryfast, faster, fast, medium, 
-          slow, slower, veryslow. The default epends on the stream type.
+          slow, slower, veryslow. The default depends on the stream type.
           faster is easier on the CPU for a given bitrate although the 
           result will be lower quality. If the fps isn't keeping up with
           the desired number either increase the preset speed or lower 
           the video size.
       -r <vrate>
           The video frame rate. If omitted defaults depends on the output
-          video size configuration.
+          video size configuration and mode.
       -s 
           Scales the screen grab (or webcam) width to the output height (-o)
           maintaining the same ration as the input. Without this option a 
@@ -78,9 +80,11 @@ USAGE: ${PROGNAME} [options] <stream_type>
           or shrinking the width dimension if the original (cam or grab area) 
           was not also in 16x9.
       -t
-          Test run, does not stream, instead saves what would have been 
-          streamed to:  test_<stream_name>.f4v
-      -T <tune-settings> NOT IMPLEMENTED
+          Test run, does not stream, instead saves what would have
+          been streamed to: test_<stream_name>.f4v. This only effects
+          the modes that stream to the internet (twitch, twitchcam
+          and youtube). This option is ignored for other stream types.
+      -T <tune-setting> NOT IMPLEMENTED
           x264 'tune' setting to use. Default depends on the stream type.
           film, animation or zerolatency are the obvious choices, 
           however best to omit unless you are sure.
@@ -343,7 +347,7 @@ do_camcap ()
     echo 
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam "
-    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${AB}kbps"
     echo "       File: ${OUTFILE}"
     echo " --------------------- "
@@ -368,7 +372,7 @@ do_youtube ()
     echo 
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam"
-    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${AB}kbps"
     if [ "$TEST" ] ; then 
 	echo "Saving to test stream file: "
@@ -413,7 +417,7 @@ do_screencap ()
     echo 
     echo " --- Settings -------- "
     echo "      Screen: ${GRABAREA} at ${GRABXY} "
-    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
+    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "       Audio: ${AC} channel(s) at ${AB}kbps"
     echo "        File: ${OUTFILE}"
     echo " --------------------- "
@@ -443,7 +447,7 @@ do_twitch ()
     echo 
     echo " --- Settings -------- "
     echo "      Screen: ${GRABAREA} at ${GRABXY} "
-    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
+    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "       Audio: ${AC} channel(s) at ${AB}kbps" 
     if [ "$TEST" ] ; then 
 	echo "Saving to test stream file: "
@@ -490,7 +494,7 @@ do_twitchcam ()
     echo " --- Settings -------- "
     echo "      Screen: ${GRABAREA} at ${GRABXY} "
     echo "      webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
-    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
+    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "       Audio: ${AC} channel(s) at ${AB}kbps"
     if [ "$TEST" ] ; then 
 	echo "Saving to test stream file: "
@@ -567,13 +571,14 @@ do_coordinates ()
 
 
 if [ ! $1 ]; then
-    STREAM_TYPE=$(whiptail --title "Select a Stream Type" --radiolist \
+    STREAM_TYPE=$(whiptail --title "Select a Stream Type" --menu \
 	"Choose a Stream Type from the list:" 12 72 5 \
-	"camcap" "Capture the webcam and save locally " ON \
-	"youtube" "Like camcap also streaming to YouTube.com " OFF \
-	"screencap" "Screen grab and save locally " OFF \
-	"twitch" "Like screencap also streaming to Twitch.tv " OFF \
-	"twitchcam" "Like twitch with webcam inset at lower left " OFF 3>&1 1>&2 2>&3)
+	"camcap" "Capture the webcam and save locally " \
+	"youtube" "Like camcap also streaming to YouTube.com " \
+	"screencap" "Screen grab and save locally " \
+	"twitch" "Like screencap also streaming to Twitch.tv " \
+	"twitchcam" "Like twitch with webcam inset at lower left " \
+	3>&1 1>&2 2>&3)
 else
     STREAM_TYPE=${1}
 fi
@@ -600,7 +605,7 @@ function query_webcam ()
 }
 
 function query_outsize() {
-# for YouTube 240p 360p 480p 720p
+# For use with YouTube 240p 360p 480p 720p
     if OUTSIZE=$(whiptail --title "Output Video Dimensions" \
 	--nocancel --radiolist \
 	"Choose dimensions for the streaming video:" 12 60 4 \
@@ -610,6 +615,171 @@ function query_outsize() {
 	"720p" "1280x720 -- fps 10" OFF 3>&1 1>&2 2>&3); 
     then
 	set_outsize $OUTSIZE
+    fi
+}
+
+function query_outsize_twitch() {
+# For use with twitch.tv 
+#   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
+    if OUTSIZE=$(whiptail --title "Video Encoder Settings" --radiolist \
+	"Choose dimensions for the streaming video:" 20 60 8 \
+	"240p" "432x240 -- fps 30" OFF \
+	"360p" "640x360 -- fps 20" OFF \
+	"450" "800x450 -- fps 15" ON \
+	"480p" "864x480 -- fps 10" OFF \
+	"504" "896x504 -- fps 10" OFF \
+	"540" "960x540 -- fps 10" OFF \
+	"576" "576x1024 -- fps 10" OFF \
+	"720p" "1280x720 -- fps 10" OFF \
+	3>&1 1>&2 2>&3); 
+    then
+	set_outsize $OUTSIZE
+    fi
+}
+
+function query_outsize_screen() {
+# For use with screen grabs
+#   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
+    if OUTSIZE=$(whiptail --title "Video Encoder Settings" --radiolist \
+	"Choose dimensions for the streaming video:" 18 60 11 \
+	"240p" "432x240 -- fps 30" OFF \
+	"360p" "640x360 -- fps 30" OFF \
+	"450" "800x450 -- fps 24" ON \
+	"480p" "864x480 -- fps 20" OFF \
+	"504" "896x504 -- fps 20" OFF \
+	"540" "960x540 -- fps 20" OFF \
+	"576" "1024x576 -- fps 15" OFF \
+	"720p" "1280x720 -- fps 15" OFF \
+	"900" "1600x900 -- fps 10" OFF \
+	"1008" "1792x1008 -- fps 10" OFF \
+	"1080p" "1920x1080 -- fps 10" OFF \
+	3>&1 1>&2 2>&3); 
+    then
+	set_outsize $OUTSIZE
+    fi
+}
+
+function query_audio() {
+    if [ "$AC" -eq 1 ] ; then
+	STAT1=ON
+	STAT2=OFF
+    else
+	STAT1=OFF
+	STAT2=ON
+    fi
+    CHOICE=$(whiptail --title "Audio Options" --radiolist --nocancel \
+	"Choose number of audio channels:" 10 60 2 \
+	"1" "Mono " $STAT1 \
+	"2" "Stereo " $STAT2 \
+	3>&1 1>&2 2>&3)
+    AC=$CHOICE
+    STAT1=OFF
+    STAT2=OFF
+    STAT3=OFF
+    STAT4=OFF
+    #if [ ! "$AB" ]; then 
+    case $AB in
+	48)
+	    STAT1=ON
+	    ;;
+	64)
+	    STAT2=ON
+	    ;;
+	96)
+	    STAT3=ON	    
+	    ;;
+	128)
+	    STAT4=ON
+	    ;;
+    esac
+    CHOICE=$(whiptail --title "Audio Options" --radiolist --nocancel \
+	"Choose bitrate in kbps from list:" 10 60 4 \
+	"48" "48 kbps " $STAT1 \
+	"64" "64 kbps " $STAT2 \
+	"96" "96 kbps " $STAT3 \
+	"128" "128 kbps " $STAT4 \
+	3>&1 1>&2 2>&3)
+    AB=$CHOICE
+}
+
+function query_video() {
+    #quality-preset #ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+    #vrate # 
+    #tune-setting # film, animation or zerolatency
+    #CBR # 'constant bit rate' setting for the video in kbps.
+    #echo "VIDEO STUB"
+    STAT1=OFF
+    STAT2=OFF
+    STAT3=OFF
+    STAT4=OFF
+    STAT5=OFF
+    STAT6=OFF
+    STAT7=OFF
+    STAT8=OFF
+    STAT9=OFF
+    case ${QUALITY} in
+	ultrafast)
+	    STAT1=ON
+	    ;;
+	superfast)
+	    STAT2=ON	    
+	    ;;
+	veryfast)
+	    STAT3=ON
+	    ;;
+	faster)
+	    STAT4=ON
+	    ;;
+	fast)
+	    STAT5=ON
+	    ;;
+	medium)
+	    STAT6=ON
+	    ;;
+	slow)
+	    STAT7=ON
+	    ;;
+	slower)
+	    STAT8=ON
+	    ;;
+	veryslow)
+	    STAT9=ON	    
+	    ;;
+    esac
+    CHOICE=$(whiptail --title "Video Encoder Options" --radiolist \
+	"Choose a quality preset (faster is easier on the CPU):" 18 60 9 \
+	"ultrafast" "ultrafast" $STAT1 \
+	"superfast" "superfast" $STAT2 \
+	"veryfast" "veryfast" $STAT3 \
+	"faster" "faster" $STAT4 \
+	"fast" "fast" $STAT5 \
+	"medium" "medium" $STAT6 \
+	"slow" "slow" $STAT7 \
+	"slower" "slower" $STAT8 \
+	"veryslow" "veryslow" $STAT9 \
+	3>&1 1>&2 2>&3)
+    QUALITY=$CHOICE
+}
+
+function query_misc() {
+    #max-bitrate #  600 for YouTube and Twitch
+    #streaming-key # 
+    #stream_url # rtmp://example.com/path
+    echo "MISC STUB"
+}
+
+function query_options() {
+    if OPTIONS=$(whiptail --title "Options" \
+	--nocancel --checklist \
+	"Choose Advanced Options to Configure:" 12 60 4 \
+	"audio" "Audio Settings (${AC} channels at ${AB}kbps)" OFF \
+	"video" "Video Encoder Settings" OFF \
+	"misc" "Miscellaneous Settings" OFF \
+	 3>&1 1>&2 2>&3);
+    then
+	for opt in $OPTIONS; do
+	    query_$(echo ${opt}| sed 's|\"||g')
+	done
     fi
 }
 
@@ -637,9 +807,7 @@ case ${STREAM_TYPE} in
 	    set_scale $OUT_H $CAM_W $CAM_H
 	    OUT_W=$NEW_W
 	fi
-	if [ "$CAM_H" -eq 480 ] ; then
-	    set_this 24 $FRATE
-	elif [ "$CAM_H" -eq 600 ] ; then
+	if [ "$CAM_H" -lt 600 ] ; then
 	    set_this 24 $FRATE
 	elif [ "$CAM_H" -lt 480 ] ; then
 	    set_this 30 $FRATE
@@ -651,6 +819,7 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
+	query_options
 	do_camcap
 	;;
     screencap)
@@ -662,19 +831,33 @@ case ${STREAM_TYPE} in
 	let B=AC*64
 	set_this $B $AB
 	AB=${THIS}
+	if [ "${OUTSIZE}" ] ; then
+	    set_outsize $OUTSIZE
+	else
+	    query_outsize_screen
+	fi
 	do_coordinates
 	if [ ! "$OUTSIZE" ] ; then
 	    OUT_W=${GRAB_W}
 	    OUT_H=${GRAB_H}
-	else
-	    set_outsize $OUTSIZE
 	fi
 	if [ "$SCALE" ] ; then
 	    set_scale $OUT_H $GRAB_W $GRAB_H
 	    OUT_W=$NEW_W
 	fi
-	set_this 15 $FRATE
+	if [ "$OUT_H" -lt 450] ; then
+	    set_this 30 $FRATE
+	elif [ "$OUT_H" -lt 480] ; then
+	    set_this 24 $FRATE
+	elif [ "$OUT_H" -lt 576 ] ; then
+	    set_this 20 $FRATE
+	elif [ "$OUT_H" -lt 900 ] ; then
+	    set_this 15 $FRATE
+	else 
+	    set_this 10 $FRATE
+	fi
 	VRATE=${THIS}
+	query_options
 	do_screencap
 	;;
     twitch*|youtube)
@@ -724,6 +907,7 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
+	query_options
 	do_youtube
 	;;
     twitch*)
@@ -742,15 +926,30 @@ case ${STREAM_TYPE} in
 	let B=AC*48
 	set_this $B $AB
 	AB=${THIS}
-	if [ ! "$OUTSIZE" ] ; then
-	    OUTSIZE=504
+	if [ "${OUTSIZE}" ] ; then
+	    set_outsize $OUTSIZE
+	else
+	    query_outsize_twitch
 	fi
-	set_outsize $OUTSIZE
+	if [ ! "$OUTSIZE" ] ; then
+	    set_outsize 504
+	fi
 	do_coordinates
-	set_this 10 $FRATE
+	if [ "$OUT_H" -lt 360] ; then
+	    set_this 30 $FRATE
+	elif [ "$OUT_H" -lt 450] ; then
+	    set_this 20 $FRATE
+	elif [ "$OUT_H" -lt 480 ] ; then
+	    set_this 15 $FRATE
+	elif [ "$OUT_H" -gt 720 ] ; then
+	    set_this 5 $FRATE
+	else 
+	    set_this 10 $FRATE
+	fi
 	VRATE=${THIS}
 	;;&
     twitch)
+	query_options
 	do_twitch
 	;;
     twitchcam)
@@ -758,6 +957,7 @@ case ${STREAM_TYPE} in
 	    CAM_W=176
 	    CAM_H=144
 	fi
+	query_options
 	do_twitchcam
 	;;
     *)
@@ -769,3 +969,13 @@ case ${STREAM_TYPE} in
 	;;
 esac
 
+##########
+    # echo "        Cam: ${CAM_W}x${CAM_H} webcam "
+    # echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
+    # echo "      Audio: ${AC} channel(s) at ${AB}kbps"
+    # echo "       File: ${OUTFILE}"
+    # 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
+    # 	echo "      Stream: ${URL}/${KEY}"
+    # echo " Local File: ${FILE}"
+    # echo "      Screen: ${GRABAREA} at ${GRABXY} "
+    # echo "      webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
