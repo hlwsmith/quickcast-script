@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.4.1-alpha.1-whiptail"
+VERSION="0.4.1-alpha.3-whiptail"
 
 CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -637,7 +637,7 @@ function query_outsize_twitch() {
 	"480p" "864x480 -- fps 10" OFF \
 	"504" "896x504 -- fps 10" OFF \
 	"540" "960x540 -- fps 10" OFF \
-	"576" "576x1024 -- fps 10" OFF \
+	"576" "1024x576 -- fps 10" OFF \
 	"720p" "1280x720 -- fps 10" OFF \
 	3>&1 1>&2 2>&3); 
     then
@@ -751,7 +751,7 @@ function query_video() {
 	    STAT8=ON
 	    ;;
 	veryslow)
-	    STAT9=ON	    
+	    STAT9=ON
 	    ;;
     esac
     CHOICE=$(whiptail --title "Video Encoder Options" --radiolist \
@@ -769,20 +769,63 @@ function query_video() {
     QUALITY=$CHOICE
 }
 
-function query_misc() {
+function query_stream() {
     #max-bitrate #  600 for YouTube and Twitch
     #streaming-key # 
     #stream_url # rtmp://example.com/path
-    echo "MISC STUB"
+    if CHOICE=$(whiptail --title "Stream Settings" --inputbox \
+	"Url for the stream?" 10 60 ${URL} \
+	3>&1 1>&2 2>&3); then
+	URL="$CHOICE"
+    else
+	echo "Operation Canceled."
+	exit
+    fi
+    if CHOICE=$(whiptail --title "Stream Settings" --inputbox \
+	"The key for the stream?" 10 60 ${KEY} \
+	3>&1 1>&2 2>&3); then
+	KEY="$CHOICE"
+    else
+	echo "Operation Canceled."
+	exit
+    fi
+    if CHOICE=$(whiptail --title "Stream Settings" --inputbox \
+	"Uplink bandwidth in kbps?" 10 60 ${BANDWIDTH} \
+	3>&1 1>&2 2>&3); then
+	BANDWIDTH="$CHOICE"
+    else
+	echo "Operation Canceled."
+	exit
+    fi
+    if whiptail --title "Stream Settings" --yesno --defaultno \
+	"Is this a test run" 10 60; then
+	TEST=True
+    else
+	TEST=
+    fi
 }
 
-function query_options() {
+function query_options_local() {
+    if OPTIONS=$(whiptail --title "Options" \
+	--nocancel --checklist \
+	"Choose Advanced Options to Configure:" 12 60 3 \
+	"audio" "Audio Settings (${AC} channels at ${AB}kbps)" OFF \
+	"video" "Video Encoder Settings" OFF \
+	 3>&1 1>&2 2>&3);
+    then
+	for opt in $OPTIONS; do
+	    query_$(echo ${opt}| sed 's|\"||g')
+	done
+    fi
+}
+
+function query_options_stream() {
     if OPTIONS=$(whiptail --title "Options" \
 	--nocancel --checklist \
 	"Choose Advanced Options to Configure:" 12 60 4 \
 	"audio" "Audio Settings (${AC} channels at ${AB}kbps)" OFF \
 	"video" "Video Encoder Settings" OFF \
-	"misc" "Miscellaneous Settings" OFF \
+	"stream" "Stream Settings" OFF \
 	 3>&1 1>&2 2>&3);
     then
 	for opt in $OPTIONS; do
@@ -827,7 +870,7 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
-	query_options
+	query_options_local
 	do_camcap
 	;;
     screencap)
@@ -865,7 +908,7 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
-	query_options
+	query_options_local
 	do_screencap
 	;;
     twitch*|youtube)
@@ -915,7 +958,7 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
-	query_options
+	query_options_stream
 	do_youtube
 	;;
     twitch*)
@@ -943,9 +986,9 @@ case ${STREAM_TYPE} in
 	    set_outsize 504
 	fi
 	do_coordinates
-	if [ "$OUT_H" -lt 360] ; then
+	if [ "$OUT_H" -lt 360 ] ; then
 	    set_this 30 $FRATE
-	elif [ "$OUT_H" -lt 450] ; then
+	elif [ "$OUT_H" -lt 450 ] ; then
 	    set_this 20 $FRATE
 	elif [ "$OUT_H" -lt 480 ] ; then
 	    set_this 15 $FRATE
@@ -955,9 +998,9 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
+	query_options_stream
 	;;&
     twitch)
-	query_options
 	do_twitch
 	;;
     twitchcam)
@@ -965,7 +1008,6 @@ case ${STREAM_TYPE} in
 	    CAM_W=176
 	    CAM_H=144
 	fi
-	query_options
 	do_twitchcam
 	;;
     *)
