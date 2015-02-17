@@ -310,9 +310,17 @@ get_windowinfo ()
 {
     THIS_W=$1
     THIS_H=$2
-    THIS_X=$3
-    THIS_Y=$4
-    #echo "Got window info ${THIS_W}x${THIS_H} : ${X},${Y}"
+    if [ $3 ]; then
+	THIS_X=$3
+    else
+	THIS_X="0"
+    fi
+    if [ $4 ];then
+	THIS_Y=$4
+    else
+	THIS_Y="0"
+    fi
+    #echo "Got window info ${THIS_W}x${THIS_H} : ${THIS_X},${THIS_Y}"
 }
 
 # get the size of the root window
