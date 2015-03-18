@@ -896,9 +896,9 @@ case ${STREAM_TYPE} in
 	    set_scale $OUT_H $GRAB_W $GRAB_H
 	    OUT_W=$NEW_W
 	fi
-	if [ "$OUT_H" -lt 450] ; then
+	if [ "$OUT_H" -lt 450 ] ; then
 	    set_this 30 $FRATE
-	elif [ "$OUT_H" -lt 480] ; then
+	elif [ "$OUT_H" -lt 480 ] ; then
 	    set_this 24 $FRATE
 	elif [ "$OUT_H" -lt 576 ] ; then
 	    set_this 20 $FRATE
