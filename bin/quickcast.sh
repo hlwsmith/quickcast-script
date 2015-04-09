@@ -552,7 +552,7 @@ do_grabxy ()
 {
     echo "Top-left corner at ${THIS_X},${THIS_Y}"
     OLD_IFS="$IFS"
-    IFS="${IFS},"
+    IFS="${IFS},x"
     read -p "Enter new X,Y offset and/or hit enter to continue." NEW_X NEW_Y
     if [ "$NEW_X" ] ; then
 	echo "Got NEW X,Y ${NEW_X},${NEW_Y}"
