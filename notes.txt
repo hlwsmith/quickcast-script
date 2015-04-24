@@ -1,5 +1,4 @@
-
-Just some random notes regarding my logitec webcam and other stuff
+Just some random notes regarding my logitech webcam and other stuff
 
 Some of my webcam's native resolutions
 see: ffmpeg -f v4l2 -list_formats all -i /dev/video0
