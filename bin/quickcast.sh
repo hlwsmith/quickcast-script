@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.4.1-alpha.4-whiptail"
+VERSION="0.4.1-alpha.5-whiptail"
 
 CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -29,7 +29,7 @@ USAGE: ${PROGNAME} [options] <stream_type>
           this setting though. This only makes sense for Twitch.tv streams
           since they seem to insist on this non-sense. If omitted then mode
           is not used, just the maxrate setting, (See -M) which is what they 
-          really want I think, even if they don't want to admit it). 
+          really want I think, even if they don't want to admit it. ;-) 
           This overides the -M setting.
       -g <size>
           Sets the screen grab capture dimensions of the form WIDTHxHEIGHT
@@ -401,7 +401,7 @@ do_youtube ()
     let GOP=(VRATE*2)
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
-    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
+    ACODEC="-c:a libfdk_aac -ar 48000 -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
     VCODEC="-c:v libx264 ${VSIZE} -preset ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
@@ -425,7 +425,8 @@ do_screencap ()
     echo 
     echo " --- Settings -------- "
     echo "      Screen: ${GRABAREA} at ${GRABXY} "
-    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "       Video: ${OUT_W}x${OUT_H} (${QUALITY})"
+    #echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "       Audio: ${AC} channel(s) at ${AB}kbps"
     echo "        File: ${OUTFILE}"
     echo " --------------------- "
@@ -435,8 +436,10 @@ do_screencap ()
     MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
     #SOUND="-f alsa -ar 44100 -ac ${AC} -i pulse"
     #MONITOR="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
-    ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
+    #SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
+    SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
+    ACODEC="-c:a libfdk_aac -ab ${AB}k -R 48000 -ac ${AC}" 
+    #ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 48000 -ac ${AC}" 
     VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
@@ -444,7 +447,8 @@ do_screencap ()
 	-filter:v "${FILTER}" \
 	${ACODEC} ${VCODEC} \
 	"${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
-} 
+}
+# 132:59 of 168:46 
 
 do_twitch ()
 {
@@ -907,7 +911,8 @@ case ${STREAM_TYPE} in
 	else 
 	    set_this 10 $FRATE
 	fi
-	VRATE=${THIS}
+	#VRATE=${THIS}
+	##VRATE=60
 	query_options_local
 	do_screencap
 	;;
