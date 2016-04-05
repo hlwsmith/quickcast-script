@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.4.1-alpha.5-whiptail"
+VERSION="0.4.1-alpha.6-whiptail"
 
 CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -73,6 +73,8 @@ USAGE: ${PROGNAME} [options] <stream_type>
       -r <vrate>
           The video frame rate. If omitted defaults depends on the output
           video size configuration and mode.
+      -R <audio sample rate>
+          in hz
       -s 
           Scales the screen grab (or webcam) width to the output height (-o)
           maintaining the same ration as the input. Without this option a 
@@ -270,6 +272,9 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:r:stU:v:x:y:" opt; do
 	r)
 	    FRATE=$OPTARG
 	    ;;
+	R)
+	    SAMPLES=$OPTARG
+	    ;;
 	s)
 	    SCALE=True
 	    ;;
@@ -356,16 +361,16 @@ do_camcap ()
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam "
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
-    echo "      Audio: ${AC} channel(s) at ${AB}kbps"
+    echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo 
     read -p "Hit any key to continue."
     echo " -- Type q to quit.-- "
-    MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
+    MIC="-f alsa -ar ${SAMPLES} -ac ${AC} -i pulse"
+    CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k "
-    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v ${VRATE}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} \
@@ -376,12 +381,13 @@ do_youtube ()
 {
     NAME="youtube"
     OUTFILE="${NAME}_${DATE}.mkv"
+    #FRATE=?? # input frame rate
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam"
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
-    echo "      Audio: ${AC} channel(s) at ${AB}kbps"
+    echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then 
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
@@ -399,10 +405,10 @@ do_youtube ()
 	VSIZE="-s ${OUT_W}x${OUT_H}"
     fi
     let GOP=(VRATE*2)
-    MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
-    ACODEC="-c:a libfdk_aac -ar 48000 -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
-    VCODEC="-c:v libx264 ${VSIZE} -preset ${QUALITY} ${BRATE}"
+    MIC="-f alsa -ar ${SAMPLES} -i pulse"
+    CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
+    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
+    VCODEC="-c:v libx264 ${VSIZE} -r:v ${VRATE} -preset ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     if [ "$TEST" ] ; then 
@@ -420,26 +426,22 @@ do_screencap ()
     NAME="screencap"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
+    #FRATE=?? # input frame rate
     OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
-    echo "      Screen: ${GRABAREA} at ${GRABXY} "
-    echo "       Video: ${OUT_W}x${OUT_H} (${QUALITY})"
-    #echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
-    echo "       Audio: ${AC} channel(s) at ${AB}kbps"
-    echo "        File: ${OUTFILE}"
+    echo "     Screen: ${GRABAREA} at ${GRABXY} "
+    echo "      Video: ${OUT_W}x${OUT_H} (${QUALITY})"
+    echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
+    echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
-    MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    #SOUND="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    #MONITOR="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    #SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
+    MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
-    ACODEC="-c:a libfdk_aac -ab ${AB}k -R 48000 -ac ${AC}" 
-    #ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 48000 -ac ${AC}" 
+    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
     VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
@@ -448,19 +450,19 @@ do_screencap ()
 	${ACODEC} ${VCODEC} \
 	"${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
 }
-# 132:59 of 168:46 
 
 do_twitch ()
 {
     NAME="twitch"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
+    #FRATE=?? # input frame rate
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
-    echo "      Screen: ${GRABAREA} at ${GRABXY} "
-    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
-    echo "       Audio: ${AC} channel(s) at ${AB}kbps" 
+    echo "     Screen: ${GRABAREA} at ${GRABXY} "
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then 
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
@@ -476,10 +478,10 @@ do_twitch ()
     # resulted in twitch complaining about max key intervals  being 
     # 3 seconds or more!
     GOP=$(echo "(${VRATE}*1.33)/1" | bc)
-    MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
-    ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE}"
+    MIC="-f alsa -ar ${SAMPLES} -i pulse"
+    SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
+    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
@@ -501,13 +503,14 @@ do_twitchcam ()
     NAME="twitchcam"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
+    #FRATE=?? # input frame rate
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
-    echo "      Screen: ${GRABAREA} at ${GRABXY} "
-    echo "      webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
-    echo "       Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
-    echo "       Audio: ${AC} channel(s) at ${AB}kbps"
+    echo "     Screen: ${GRABAREA} at ${GRABXY} "
+    echo "     webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then 
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
@@ -519,11 +522,11 @@ do_twitchcam ()
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
     let GOP=VRATE*2-2
-    MIC="-f alsa -ar 44100 -ac ${AC} -i pulse"
-    SCREEN="-video_size ${GRABAREA} -framerate ${VRATE} -i :0.0+${GRABXY}"
-    CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -framerate ${VRATE} -i ${WEBCAM}"
-    ACODEC="-c:a libfdk_aac -ab ${AB}k -ar 44100 -ac ${AC}" 
-    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE}"
+    MIC="-f alsa -ar ${SAMPLES} -i pulse"
+    SCREEN="-video_size ${GRABAREA} i :0.0+${GRABXY}"
+    CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
+    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
     OUTFMT="-f flv"
@@ -911,7 +914,7 @@ case ${STREAM_TYPE} in
 	else 
 	    set_this 10 $FRATE
 	fi
-	#VRATE=${THIS}
+	VRATE=${THIS}
 	##VRATE=60
 	query_options_local
 	do_screencap

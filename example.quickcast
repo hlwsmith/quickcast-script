@@ -24,4 +24,5 @@ YOUTUBEKEYS[480p]=example.zzzz-zzzz-zzzz-zzzz
 BANDWIDTH="650"
 WEBCAM=/dev/video0
 SAVEDIR=${HOME}/quickcasts
-
+# default audio sample rate, either 44100 or 48000 (required)
+SAMPLES=48000
