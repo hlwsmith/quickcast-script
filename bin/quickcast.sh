@@ -381,7 +381,6 @@ do_youtube ()
 {
     NAME="youtube"
     OUTFILE="${NAME}_${DATE}.mkv"
-    #FRATE=?? # input frame rate
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
@@ -426,7 +425,6 @@ do_screencap ()
     NAME="screencap"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
-    #FRATE=?? # input frame rate
     OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
     echo 
@@ -456,7 +454,6 @@ do_twitch ()
     NAME="twitch"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
-    #FRATE=?? # input frame rate
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
@@ -503,7 +500,6 @@ do_twitchcam ()
     NAME="twitchcam"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
-    #FRATE=?? # input frame rate
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
