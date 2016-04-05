@@ -221,7 +221,7 @@ set_scale ()
     NEW_W=$(echo ${OLD_W}*${NEW_H} / ${OLD_H} | bc)
 }
 
-while getopts ":Vhb:c:C:f:g:i:K:M:o:r:stU:v:x:y:" opt; do
+while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:stU:v:x:y:" opt; do
     case $opt in
 	V)
 	    echo "${PROGNAME} ${VERSION}"
