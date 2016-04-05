@@ -370,7 +370,9 @@ do_camcap ()
     MIC="-f alsa -ar ${SAMPLES} -ac ${AC} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k "
-    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v ${VRATE}"
+    # just letting the underlying ffmpeg decide on the framerate here
+    #VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v ${VRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} \
