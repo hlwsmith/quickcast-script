@@ -1,5 +1,14 @@
 
-Just some random notes regarding my logitec webcam and other stuff
+'-framerate' is for the INPUT side, like to tell x11 what to
+do. Probably bext just to leave it off so it chooses the appropiate
+vaule here.
+
+'-v:r <fps>' would be how you set the framerate on the output side.
+
+ffmpeg -f x11grab -framerate 60 -video_size 1280x720  -c:v libx264 -preset ultrafast -threads 4  -qp 0 output.mp4
+
+
+Just some random notes regarding my logitech webcam and other stuff
 
 Some of my webcam's native resolutions
 see: ffmpeg -f v4l2 -list_formats all -i /dev/video0
