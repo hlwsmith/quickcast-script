@@ -1,4 +1,13 @@
 
+ffmpeg -y -loglevel error -f rawvideo -vcodec rawvideo -s 1280x720 -pix_fmt rgb24 -r 29.97 -i - -an -i first_tank_attack_endTEMP_MPY_wvf_snd.mp3 -acodec copy -vcodec libx264 -preset slow -crf 16 -pix_fmt yuv420p first_tank_attack_end.mkv
+
+ffmpeg -i  screencap_2016-04-05_002315.mkv -c:v libx264 -preset slow -crf 16 -c:a copy output_crf16.mkv
+
+ffmpeg -i quickcasts/screencap_2016-04-07_023542.mkv -acodec copy -vcodec libx264 -preset slow -crf 16 -pix_fmt yuv420p first_tank_attack_end.mkv
+
+ffmpeg -y -ss 1724 -i quickcasts/screencap_2016-04-07_023542.mkv -acodec copy -vcodec libx264 -preset slow -crf 16 -pix_fmt yuv420p -to 2266 first_tank_attack_end.mkv
+
+
 '-framerate' is for the INPUT side, like to tell x11 what to
 do. Probably bext just to leave it off so it chooses the appropiate
 vaule here.
