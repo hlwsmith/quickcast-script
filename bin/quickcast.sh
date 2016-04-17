@@ -441,7 +441,7 @@ do_screencap ()
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
-    SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
+    SCREEN="-video_size ${GRABAREA} -framerate 30 -i :0.0+${GRABXY}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
     VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
@@ -902,19 +902,7 @@ case ${STREAM_TYPE} in
 	    set_scale $OUT_H $GRAB_W $GRAB_H
 	    OUT_W=$NEW_W
 	fi
-	if [ "$OUT_H" -lt 450 ] ; then
-	    set_this 30 $FRATE
-	elif [ "$OUT_H" -lt 480 ] ; then
-	    set_this 24 $FRATE
-	elif [ "$OUT_H" -lt 576 ] ; then
-	    set_this 20 $FRATE
-	elif [ "$OUT_H" -lt 900 ] ; then
-	    set_this 15 $FRATE
-	else 
-	    set_this 10 $FRATE
-	fi
-	VRATE=${THIS}
-	##VRATE=60
+	VRATE=30
 	query_options_local
 	do_screencap
 	;;
