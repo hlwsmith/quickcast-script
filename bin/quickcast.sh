@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.4.1-alpha.6-whiptail"
+VERSION="0.4.2b1"
 
 CONFIGFILE="${HOME}/.quickcast"
 # if a special ffmpeg is needed and other variables
@@ -64,12 +64,13 @@ USAGE: ${PROGNAME} [options] <stream_type>
           streams. For 'screencap' and 'camcap' the input sized is
           used.
       -Q <quality-preset>
-          One of ultrafast, superfast, veryfast, faster, fast, medium, 
-          slow, slower, veryslow. The default depends on the stream type.
-          faster is easier on the CPU for a given bitrate although the 
-          result will be lower quality. If the fps isn't keeping up with
-          the desired number either increase the preset speed or lower 
-          the video size.
+          One of ultrafast, superfast, veryfast, faster, fast, medium,
+          slow, slower, veryslow. The default depends on the stream
+          type.  faster is easier on the CPU for a given bitrate
+          although the result will be a bigger file (and more stream
+          bandwidth). If the fps isn't keeping up with the desired
+          number either increase this preset, or lower the video
+          size.
       -r <vrate>
           The video frame rate. If omitted defaults depends on the output
           video size configuration and mode.
