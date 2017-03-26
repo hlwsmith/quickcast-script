@@ -522,7 +522,7 @@ do_twitchcam ()
     echo " -- Type q + enter to quit. --"
     let GOP=VRATE*2-2
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
-    SCREEN="-video_size ${GRABAREA} i :0.0+${GRABXY}"
+    SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
     VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
