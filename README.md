@@ -11,18 +11,18 @@ ffmpeg to stream live content.
 
 I would use [Kazam](http://launchpad.net/kazam) for screencasts but
 there's no way to adjust the microphone settings. It seems stuck
-on 44.1khz (oh, and the 90's called and wanted there sample rate
+on 44.1 khz (oh, and the 90's called and wanted their sample rate
 back!)
 
-Also in theory you can stream live to YouTube or twitch using this,
-though I've not tested twitch at all recently. My uplink is horrible
+Also in theory you can stream live to YouTube or Twitch using this,
+though I've not tested Twitch at all recently. My uplink is horrible
 so it is hard to actually test this aspect.
 
 ## New feature
 
 This now uses whiptail for a dialog type of text user interface. I
-think whiptail is installed by default of debian based systems (or do
-apt-get install whiptail)
+think whiptail is installed by default of Debian based systems (or do
+apt-get install whiptail).
 
 You can avoid the dialogs by supplying ALL the needed information with
 the command invocation along with the -S flag (to Skip the final
