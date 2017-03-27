@@ -422,10 +422,11 @@ do_youtube ()
     VCODEC="-c:v libx264 ${VSIZE} -r:v ${VRATE} -preset ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
-    if [ "$TEST" ] ; then 
-	OUTPUT="${SAVEDIR}/${OUTFILE}|[f=flv]${SAVEDIR}/test_${NAME}.f4v"
-    else 
-	OUTOUT="${SAVEDIR}/${OUTFILE}|[f=flv]${URL}/${KEY}"
+    if [ "$TEST" ] ; then
+	OUTPUT="${SAVEDIR}/${OUTFILE}|${SAVEDIR}/test_${NAME}.f4v"
+	echo "Saving to test stream file: ${OUTPUT}"
+    else
+	OUTPUT="${SAVEDIR}/${OUTFILE}|[f=flv]${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} -pix_fmt yuv420p -g ${GOP} \
@@ -464,6 +465,7 @@ do_screencap ()
 do_twitch ()
 {
     NAME="twitch"
+    OUTFILE="${NAME}_${DATE}.mkv"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
@@ -478,6 +480,7 @@ do_twitch ()
     else
 	echo "      Stream: ${URL}/${KEY}"
     fi
+    echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
@@ -497,6 +500,7 @@ do_twitch ()
     OUTFMT="-f flv" 
     if [ "$TEST" ] ; then 
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
+	echo "Saving to test stream file: ${OUTPUT}"
     else 
 	OUTPUT="${URL}/${KEY}"
     fi
@@ -539,8 +543,8 @@ do_twitchcam ()
     FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
     OUTFMT="-f flv"
     if [ "$TEST" ] ; then 
-	echo "Saving to test stream file: ${SAVEDIR}/test_${NAME}.f4v"
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
+	echo "Saving to test stream file: ${OUTPUT}"
     else 
 	OUTPUT="${URL}/${KEY}"
     fi
