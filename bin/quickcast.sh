@@ -936,11 +936,11 @@ case ${STREAM_TYPE} in
 	    URL="${YOUTUBE_URL}"
 	fi
 	if [ ! "$KEY" ] ; then
-	    KEY=${YOUTUBEKEYS[$OUTSIZE]}
+	    KEY=${YOUTUBEKEY}
 	fi
 	if [ ! "$KEY" ] ; then
-	    echo "YouTube Key not found for -o $OUTSIZE"
-	    # let them input key a key here?
+	    echo "YouTube Key not found"
+	    # TODO: let them input the key here?
 	    exit 1
 	fi
 	if [ $CAM_H -eq 480 ] ; then
