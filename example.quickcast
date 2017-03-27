@@ -8,9 +8,6 @@
 # keys needed for live streaming sites, such as twitch.tv or youtube.com.
 # Obviously real keys should be kept private (ie. don't post real keys
 # to gitgub or have the real version of file be world readable).  
-#
-# Fill this in with your real keys and rename this to .quickcast in
-# your home directory.
 
 # twich.tv just uses one key
 TWITCHKEY=live_XXXXXXXX_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
