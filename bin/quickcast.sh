@@ -365,7 +365,7 @@ check_size ()
 do_camcap ()
 {
     NAME="camcap"
-    OUTFILE="${NAME}_${DATE}.mkv"
+    OUTFILE="${NAME}_${DATE}.avi"
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
@@ -392,7 +392,7 @@ do_camcap ()
 do_youtube () 
 {
     NAME="youtube"
-    OUTFILE="${NAME}_${DATE}.mkv"
+    OUTFILE="${NAME}_${DATE}.avi"
     echo "  Using stream setup ${NAME}."
     echo 
     echo " --- Settings -------- "
@@ -465,7 +465,7 @@ do_screencap ()
 do_twitch ()
 {
     NAME="twitch"
-    OUTFILE="${NAME}_${DATE}.mkv"
+    OUTFILE="${NAME}_${DATE}.avi"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
