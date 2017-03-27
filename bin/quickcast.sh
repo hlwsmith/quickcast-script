@@ -13,6 +13,10 @@ source "${CONFIGFILE}"
 
 USAGE="
 USAGE: ${PROGNAME} [options] <stream_type>
+
+If run without options or ${PROGNAME} will use dialog boxes to query
+the user for the needed information.
+
   Options:
       -h
           Output this help
@@ -28,36 +32,35 @@ USAGE: ${PROGNAME} [options] <stream_type>
           this is not true CBR, the encoder will attempt to gravitate toward 
           this setting though. This only makes sense for Twitch.tv streams
           since they seem to insist on this non-sense. If omitted then mode
-          is not used, just the maxrate setting, (See -M) which is what they 
-          really want I think, even if they don't want to admit it. ;-) 
+          is not used, just the maxrate setting, (See -M) which is what they
+          really want I think, even if they don't want to admit it.
           This overides the -M setting.
-      -g <size>
+      -g <screen-capture-dimensions>
           Sets the screen grab capture dimensions of the form WIDTHxHEIGHT
           If omitted it is selected interactively via clicking on the 
-          desired window for Twitch streams or for Screen captures, and 
-          no screen is grabbed for everythihg else. 
-      -i <size>
+          desired window for Twitch streams or for Screen captures, and
+          no screen is grabbed for everythihg else.
+      -i <input-video-dimensions>
           Size of the input video from the webcam, one of:
             160x120 176x144 352x288 432x240 640x360 864x480 1024x576 1280x720
           The first 3 are more square-ish (qqvga, qcif cif), good for
-          insets.  The others are 16x9 (or almost).  If omitted
-          640x360 is used for camcap and screencap, 176x144 (qcif) is used
-          for the twitchcam inset and the remaining modes will not use 
-          the camera.
+          insets.  The others are 16x9 (or almost).  The default is 640x360
+          for camcap and youtube, while 176x144 (qcif) is used for the
+          twitchcam inset.
       -K <streaming-key>
           The streaming key to use for the YouTube or Twitch stream 
-          (the option is ignored otherwise.) By default the proper key 
+          (the option is ignored otherwise.) By default the proper key
           is selected from ${CONFIGFILE}
       -M <max-bitrate>
           The max bitrate of the video encoder in kbps, the default depends 
           on the stream type. (around 600 for YouTube and Twitch streams)
-          Remember to add the audio bitrate to this if you want to determine 
+          Remember to add the audio bitrate to this if you want to determine
           what the final bitrate will be. Overridden by the -C setting
-      -o <output_height> 
-          Sets the output height, where <output_height> is one of:
+      -o <output-height>
+          Sets the output height, where <output-height> is one of:
              240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
-          The width will then be set to a hardcoded (~16x9) dimension 
-          unless the -s option is used (See below).
+          The width will then be set to a hardcoded (~16x9) dimension
+          unless the -s (scale) option is used.
           240p, 360p 480p and 720p could be used to live stream to YouTube.
           The defaults are:
           360p for 'youtube', 504 for the 'twitch' and 'twitchcam'
@@ -74,16 +77,16 @@ USAGE: ${PROGNAME} [options] <stream_type>
       -r <vrate>
           The video frame rate. If omitted defaults depends on the output
           video size configuration and mode.
-      -R <audio sample rate>
+      -R <audio-sample-rate>
           in hz
-      -s 
+      -s
           Scales the screen grab (or webcam) width to the output height (-o)
-          maintaining the same ration as the input. Without this option a 
-          standard (~16x9-ish) width will be used, potentially stretching 
-          or shrinking the width dimension if the original (cam or grab area) 
+          maintaining the same ration as the input. Without this option a
+          standard (~16x9-ish) width will be used, potentially stretching
+          or shrinking the width dimension if the original (cam or grab area)
           was not also in 16x9.
       -S
-          Skip the option dialogs, taking the defaults without querying 
+          Skip the option dialogs, taking the defaults without querying
           for conformation.
       -t
           Test run, does not stream, instead saves what would have
@@ -92,23 +95,23 @@ USAGE: ${PROGNAME} [options] <stream_type>
           and youtube). This option is ignored for other stream types.
       -T <tune-setting> NOT IMPLEMENTED
           x264 'tune' setting to use. Default depends on the stream type.
-          film, animation or zerolatency are the obvious choices, 
+          film, animation or zerolatency are the obvious choices,
           however best to omit unless you are sure.
       -U <rtmp://example.com/path>
-          Overrides the URL for streaming to YouTube or Twitch, otherwise 
+          Overrides the URL for streaming to YouTube or Twitch, otherwise
           the applicable one found in ${CONFIGFILE} is used.
           eg: -U rtmp://a.rtmp.youtube.com/live2
       -v <v4l2_capture_device>
           If omitted ${WEBCAM} is used.
-      -V 
+      -V
           Print the program's version number and exit.
       -x <X offset>
-          The X offset from the left side of the screen of left edge 
-          of the screen grab area. If omitted it is selected interactively 
+          The X offset from the left side of the screen of left edge
+          of the screen grab area. If omitted it is selected interactively
           via clicking on the desired window.
       -y <Y offset>
           The Y offset from the top side of the screen of the top edge
-          of the screen grab area. If omitted it is selected interactively 
+          of the screen grab area. If omitted it is selected interactively
           via clicking on the desired window.
 "
 STREAM_TYPES="camcap youtube screencap twitch twitchcam"
@@ -846,6 +849,7 @@ function query_options_stream() {
     fi
 }
 
+echo ${VERSION}
 case ${STREAM_TYPE} in
 # camcap youtube screencap twitch twitchcam 
     camcap)
