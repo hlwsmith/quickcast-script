@@ -2,15 +2,9 @@
 
 PROGNAME="quickcast.sh"
 VERSION="0.5.0b1"
-
 CONFIGFILE="${HOME}/.quickcast"
-# if a special ffmpeg is needed and other variables
-#FFMPEG="ffmpeg -loglevel warning"
-FFMPEG="ffmpeg -y -loglevel info"
 DATE=`date +%Y-%m-%d_%H%M%S`
-
-source "${CONFIGFILE}"
-
+function show_usage() {
 USAGE="
 USAGE: ${PROGNAME} [options] <stream_type>
 
@@ -21,7 +15,7 @@ the user for the needed information.
       -h
           Output this help
       -b <Audio bitrate>
-          The bitrate for the aac audio codec in kbps. 
+          The bitrate for the audio encoder in kbps. 
           The default is 48*<number of channels> for Twitch streams 
           and 64*<number of channels> for everything else. 
       -c <Audio_channels>
@@ -42,11 +36,9 @@ the user for the needed information.
           no screen is grabbed for everythihg else.
       -i <input-video-dimensions>
           Size of the input video from the webcam, one of:
-            160x120 176x144 352x288 432x240 640x360 864x480 1024x576 1280x720
-          The first 3 are more square-ish (qqvga, qcif cif), good for
-          insets.  The others are 16x9 (or almost).  The default is 640x360
-          for camcap and youtube, while 176x144 (qcif) is used for the
-          twitchcam inset.
+            ${CAMSIZES}
+          The default is ${DEFAULT_CAMSIZE}. The default and the video
+          sizes can be set in the config file.
       -K <streaming-key>
           The streaming key to use for the YouTube or Twitch stream 
           (the option is ignored otherwise.) By default the proper key
@@ -114,6 +106,9 @@ the user for the needed information.
           of the screen grab area. If omitted it is selected interactively
           via clicking on the desired window.
 "
+echo "$USAGE"
+}
+
 STREAM_TYPES="camcap youtube screencap twitch twitchcam"
 declare -A STREAM_DESCS
 STREAM_DESCS[camcap]="    - Capture the webcam and save locally."
@@ -228,99 +223,6 @@ set_scale ()
     NEW_W=$(echo ${OLD_W}*${NEW_H} / ${OLD_H} | bc)
 }
 
-while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
-    case $opt in
-	V)
-	    echo "${PROGNAME} ${VERSION}"
-	    exit 0
-	    ;;
-	h)
-	    echo "$USAGE" 
-	    echo "Current list of configured stream names:"
-	    for stream in ${STREAM_TYPES}; do 
-		echo "  * $stream ${STREAM_DESCS[$stream]}"
-	    done
-	    echo "Example use: ${0} -o 360p youtube"
-	    echo
-	    exit 0
-	    ;;
-	b)
-	    AB=$OPTARG
-	    ;;
-	c)
-	    AC=$OPTARG
-	    ;;
-	C)
-	    CBR=$OPTARG
-	    ;;
-	g)
-	    GRABSIZE=$OPTARG
-	    set_this_wh $OPTARG
-	    GRAB_W=$THIS_W
-	    GRAB_H=$THIS_H
-	    ;;
-        K)
-	    KEY=$OPTARG
-	    ;;
-	i)
-	    set_this_wh $OPTARG
-	    CAM_W=$THIS_W
-	    CAM_H=$THIS_H
-	    ;;
-	M)
-	    MAXRATE=$OPTARG
-	    ;;
-	o)
-	    OUTSIZE=$OPTARG
-	    ;;
-        Q)
-	    QUALITY=$OPTARG
-	    ;;
-	r)
-	    FRATE=$OPTARG
-	    ;;
-	R)
-	    SAMPLES=$OPTARG
-	    ;;
-	s)
-	    SCALE=True
-	    ;;
-	S)
-	    SKIP=True
-	    ;;
-	t)
-	    TEST=True
-	    echo "Running in test mode"
-	    ;;
-	T)
-	    # not in use
-	    TUNE=$OPTARG
-	    ;;
-	U)
-	    URL=$OPTARG
-	    ;;
-	v)
-	    WEBCAM=$OPTARG
-	    ;;
-	x)
-	    GRAB_X=$OPTARG
-	    ;;
-	y)
-	    GRAB_Y=$OPTARG
-	    ;;
-	\?)
-	    echo "Invalid option: -$OPTARG"  >&2
-	    exit 1
-	    ;;
-	:)
-	    echo "Option -$OPTARG requires a argument."  >&2
-	    echo "$USAGE" 
-	    exit 1
-	    ;;
-    esac
-done
-shift $((OPTIND-1))
-
 get_windowinfo ()
 {
     THIS_W=$1
@@ -379,7 +281,7 @@ do_camcap ()
     echo " -- Type q to quit.-- "
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
-    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k "
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k "
     # just letting the underlying ffmpeg decide on the framerate here
     #VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v ${VRATE}"
     VCODEC="-c:v libx264 -r:v ${VRATE} -preset ${QUALITY} -qp 0"
@@ -418,7 +320,7 @@ do_youtube ()
     let GOP=(VRATE*2)
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
-    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
     VCODEC="-c:v libx264 ${VSIZE} -r:v ${VRATE} -preset ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
@@ -452,7 +354,7 @@ do_screencap ()
     echo " -- Type q + enter to quit. --"
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -framerate 30 -i :0.0+${GRABXY}"
-    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k" 
     VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
@@ -492,7 +394,7 @@ do_twitch ()
     GOP=$(echo "(${VRATE}*1.33)/1" | bc)
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
-    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k" 
     VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
@@ -537,7 +439,7 @@ do_twitchcam ()
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
-    ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k" 
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k" 
     VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
@@ -611,19 +513,32 @@ else
 fi
 
 function query_webcam ()
-# 160x120 176x144 352x288 432x240 640x360 864x480 1280x720
+# CAMSIZES and DEFAULT_CAMSIZE are set the the config file
 {
+    MSG=""
+    CHECKED=0
+    if [ ! -v CAMSIZES ]; then
+       CAMSIZES="176x144 640x360 640x480"
+       DEFAULT_CAMSIZE=640x480
+       MSG="Camera sizes NOT set in config file! "
+    fi
+    menu=$(for s in $CAMSIZES
+       do
+         ratio=$(echo $s | sed 's|x|/|')
+         if [ $s = $DEFAULT_CAMSIZE ]
+         then
+             if [ ! $CHECKED -eq 1 ] 
+             then echo $s $(echo "scale=2; $ratio"|bc) ON; CHECKED=1
+             else echo $s $(echo "scale=2; $ratio"|bc) OFF
+             fi
+         else echo $s $(echo "scale=2; $ratio"|bc) OFF
+         fi
+       done
+       )
     if INSIZE=$(whiptail --title "Input Video Dimensions" \
 	--nocancel --radiolist \
-	"Choose dimensions for the video camera:" 15 60 8 \
-	"160x120" "160x120 qqvga -- max fps 30" OFF \
-	"176x144" "176x144 qcif -- max fps 30" OFF \
-	"352x288" "352x288 cif -- max fps 30" OFF \
-	"432x240" "432x240 -- max fps 30" OFF \
-	"640x360" "640x360 -- max fps 30" ON \
-	"864x480" "864x480 -- max fps 24" OFF \
-	"1024x576" "1024x576 -- max fps 15" OFF \
-	"1280x720" "1280x720 -- max fps 10" OFF 3>&1 1>&2 2>&3); 
+        "${MSG}Choose dimensions for the video camera:" 15 60 8 \
+        $menu 3>&1 1>&2 2>&3);
     then
 	set_this_wh $INSIZE
 	CAM_W=$THIS_W
@@ -853,7 +768,179 @@ function query_options_stream() {
     fi
 }
 
+function make_config() {
+    echo "Creating config file in ${CONFIGFILE}"
+cat > ${CONFIGFILE} <<EOF
+# bash source file
+# keys for live streaming sites, used by quickcast.sh script
+# obviously these can't be posted on github and stuff.
+
+#### Twich.tv
+TWITCH_URL="rtmp://live.twitch.tv/app"
+# Twich.tv just uses one key
+TWITCHKEY=AAAA_DDDDDDDD_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+#### YouTube.com
+YOUTUBE_URL="rtmp://a.rtmp.youtube.com/live2"
+# youtube now uses one key too
+YOUTUBEKEY=xxxx-xxxx-xxxx-xxxx
+
+#### Other configuration variables
+
+# Perhaps yoy want to test with the system ffmpeg instead of the one
+# you built (you DID build your own ffmpeg binary, of course)
+# or change the loggin verbosity.
+FFMPEG="ffmpeg -y -loglevel info"
+#FFMPEG="/usr/bin/ffmpeg -y -loglevel info"
+
+# Tou probably have more uplink then me and should raise this number, 
+# it's in kilobits/sec
+BANDWIDTH="650"
+
+# default webcam to use, usually this is correct
+WEBCAM=/dev/video0
+
+# Where to save the files, This directory is creatred if it doesn't exist
+SAVEDIR=\${HOME}/quickcasts
+
+# default audio sample rate
+SAMPLES=48000
+#SAMPLES=44100
+
+# libmp3lame audio encoder is the one more likley to work out of the box.
+# In order to get AAC working you'll likely need to build your own
+# ffmpeg binary. At any rate uncomment one of the next two lines
+AENCODE=libmp3lame
+#AENCODE=libfdk_aac
+
+# If you have v4l2-ctl (found in the v4l-utils package in Debian) you
+# run this command to figure out the sizes toyr webcam supports.
+# v4l2-ctl --list-formats-ext | grep Size: | awk '{print \$3}' | sort -n| uniq
+# Supported input video sizes seporated by space:
+CAMSIZES="176x144 352x288 432x240 640x360 640x480 800x600 864x480 1024x576 1280x720"
+
+# Default input video size to use, obviously one from the previous list
+DEFAULT_CAMSIZE=640x480
+
+EOF
+}
+
+function check_setup() {
+    if [ ! -s ${CONFIGFILE} ]
+    then make_config
+    fi
+    source "${CONFIGFILE}"
+    if [ -a ${SAVEDIR} ]; then
+	if [ ! -d ${SAVEDIR} ]; then
+	    echo "Please set a valid SAVEDIR in your config file:\n ${CONFIGFILE}"
+	    exit 1
+	fi
+    else
+	# SAVEDIR doesn't exist so make it
+	echo "Creating save directory ${SAVEDIR}"
+	mkdir ${SAVEDIR}
+    fi
+}
+
+#### main ####
+
 echo ${VERSION}
+check_setup
+# why can't I put this option parsing into a fucntion?
+while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
+    case $opt in
+	V)
+	    echo "${PROGNAME} ${VERSION}"
+	    exit 0
+	    ;;
+	h)
+	    #echo "$USAGE"
+	    show_usage
+	    echo "Current list of configured stream names:"
+	    for stream in ${STREAM_TYPES}; do 
+		echo "  * $stream ${STREAM_DESCS[$stream]}"
+	    done
+	    echo "Example use: ${0} -o 360p youtube"
+	    echo
+	    exit 0
+	    ;;
+	b)
+	    AB=$OPTARG
+	    ;;
+	c)
+	    AC=$OPTARG
+	    ;;
+	C)
+	    CBR=$OPTARG
+	    ;;
+	g)
+	    GRABSIZE=$OPTARG
+	    set_this_wh $OPTARG
+	    GRAB_W=$THIS_W
+	    GRAB_H=$THIS_H
+	    ;;
+        K)
+	    KEY=$OPTARG
+	    ;;
+	i)
+	    set_this_wh $OPTARG
+	    CAM_W=$THIS_W
+	    CAM_H=$THIS_H
+	    ;;
+	M)
+	    MAXRATE=$OPTARG
+	    ;;
+	o)
+	    OUTSIZE=$OPTARG
+	    ;;
+        Q)
+	    QUALITY=$OPTARG
+	    ;;
+	r)
+	    FRATE=$OPTARG
+	    ;;
+	R)
+	    SAMPLES=$OPTARG
+	    ;;
+	s)
+	    SCALE=True
+	    ;;
+	S)
+	    SKIP=True
+	    ;;
+	t)
+	    TEST=True
+	    echo "Running in test mode"
+	    ;;
+	T)
+	    # not in use
+	    TUNE=$OPTARG
+	    ;;
+	U)
+	    URL=$OPTARG
+	    ;;
+	v)
+	    WEBCAM=$OPTARG
+	    ;;
+	x)
+	    GRAB_X=$OPTARG
+	    ;;
+	y)
+	    GRAB_Y=$OPTARG
+	    ;;
+	\?)
+	    echo "Invalid option: -$OPTARG"  >&2
+	    exit 1
+	    ;;
+	:)
+	    echo "Option -$OPTARG requires a argument."  >&2
+	    echo "$USAGE" 
+	    exit 1
+	    ;;
+    esac
+done
+shift $((OPTIND-1))
+
 case ${STREAM_TYPE} in
 # camcap youtube screencap twitch twitchcam 
     camcap)
