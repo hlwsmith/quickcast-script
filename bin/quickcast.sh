@@ -377,12 +377,12 @@ do_camcap ()
     echo 
     read -p "Hit any key to continue."
     echo " -- Type q to quit.-- "
-    MIC="-f alsa -ar ${SAMPLES} -ac ${AC} -i pulse"
+    MIC="-f alsa -ar ${SAMPLES} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a libfdk_aac -ac ${AC} -ab ${AB}k "
     # just letting the underlying ffmpeg decide on the framerate here
     #VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v ${VRATE}"
-    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
+    VCODEC="-c:v libx264 -r:v ${VRATE} -preset ${QUALITY} -qp 0"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} \
@@ -886,7 +886,7 @@ case ${STREAM_TYPE} in
 	    set_this 15 $FRATE
 	elif [ "$CAM_H" -gt 720 ] ; then
 	    set_this 5 $FRATE
-	else 
+	else
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
