@@ -1,3 +1,7 @@
+# The is an example .quickcast file
+# Fill in the proper values for the URL's and KEYS and rename to
+# .quickcast in your home directory
+#
 # This is a bash source file, sourced by the quickcast.sh script 
 #
 # This file is used for configuration, mostly for storing the secret
@@ -5,17 +9,22 @@
 # Obviously real keys should be kept private (ie. don't post real keys
 # to gitgub or have the real version of file be world readable).  
 #
-# Fill tgis in with your real keys and rename this to .quickcast in
+# Fill this in with your real keys and rename this to .quickcast in
 # your home directory.
 
 # twich.tv just uses one key
 TWITCHKEY=live_XXXXXXXX_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWITCH_URL="rtmp://live.twitch.tv/app"
+
 # youtube now uses one key too
 YOUTUBEKEY=xxxx-xxxx-xxxx-xxxx
+YOUTUBE_URL="rtmp://a.rtmp.youtube.com/live2"
 
 # other configuration variables
+# Yoy probably have a lot better uplink than me!
 BANDWIDTH="650"
 WEBCAM=/dev/video0
+# make sure this directory exists and is writeable.
 SAVEDIR=${HOME}/quickcasts
 # default audio sample rate, either 44100 or 48000 (required)
 SAMPLES=48000
