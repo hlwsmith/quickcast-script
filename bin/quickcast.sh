@@ -82,6 +82,9 @@ USAGE: ${PROGNAME} [options] <stream_type>
           standard (~16x9-ish) width will be used, potentially stretching 
           or shrinking the width dimension if the original (cam or grab area) 
           was not also in 16x9.
+      -S
+          Skip the option dialogs, taking the defaults without querying 
+          for conformation.
       -t
           Test run, does not stream, instead saves what would have
           been streamed to: test_<stream_name>.f4v. This only effects
@@ -222,7 +225,7 @@ set_scale ()
     NEW_W=$(echo ${OLD_W}*${NEW_H} / ${OLD_H} | bc)
 }
 
-while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:stU:v:x:y:" opt; do
+while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
     case $opt in
 	V)
 	    echo "${PROGNAME} ${VERSION}"
@@ -278,6 +281,9 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:stU:v:x:y:" opt; do
 	    ;;
 	s)
 	    SCALE=True
+	    ;;
+	S)
+	    SKIP=True
 	    ;;
 	t)
 	    TEST=True
@@ -876,7 +882,9 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
-	query_options_local
+	if [ ! "${SKIP}" ] ; then
+	    query_options_local
+	fi
 	do_camcap
 	;;
     screencap)
@@ -903,7 +911,9 @@ case ${STREAM_TYPE} in
 	    OUT_W=$NEW_W
 	fi
 	VRATE=30
-	query_options_local
+	if [ ! "${SKIP}" ] ; then
+	    query_options_local
+	fi
 	do_screencap
 	;;
     twitch*|youtube)
@@ -953,7 +963,9 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
-	query_options_stream
+	if [ ! "${SKIP}" ] ; then
+            query_options_stream
+	fi
 	do_youtube
 	;;
     twitch*)
@@ -993,7 +1005,9 @@ case ${STREAM_TYPE} in
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
-	query_options_stream
+	if [ ! "${SKIP}" ] ; then
+            query_options_stream
+	fi
 	;;&
     twitch)
 	do_twitch
