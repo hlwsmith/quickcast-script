@@ -21,7 +21,7 @@ YOUTUBEKEY=xxxx-xxxx-xxxx-xxxx
 YOUTUBE_URL="rtmp://a.rtmp.youtube.com/live2"
 
 # other configuration variables
-# Yoy probably have a lot better uplink than me!
+# You probably have a lot better uplink than me!
 BANDWIDTH="650"
 WEBCAM=/dev/video0
 # make sure this directory exists and is writeable.
