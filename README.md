@@ -21,7 +21,7 @@ so it is hard to actually test this aspect.
 ## New feature
 
 This now uses whiptail for a dialog type of text user interface. I
-think whiptail is installed by default of debian bassed systems (or do
+think whiptail is installed by default of debian based systems (or do
 apt-get install whiptail)
 
 You can avoid the dialogs by supplying ALL the needed information with
