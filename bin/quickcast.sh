@@ -375,9 +375,9 @@ do_screencap ()
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
-    SCREEN="-video_size ${GRABAREA} -framerate 30 -i :0.0+${GRABXY}"
-    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k" 
-    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0"
+    SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v 15"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
