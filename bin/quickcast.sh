@@ -477,47 +477,6 @@ do_twitchcam ()
 	${ACODEC} ${VCODEC} \
 	-force_key_frames "${KFRAMES}" -pix_fmt yuv420p -g $GOP \
 	${OUTFMT} "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
-} 
-
-do_grabarea ()
-{
-    echo "Click the mouse on the window you wish to capture" 
-    WINDOWINFO=$(echo $(xwininfo| awk '/Corners|-geo/{print $2 }') | sed 's|+\([0-9]*\)+\([0-9]*\) \([0-9]*\)x\([0-9]*\).*|\3 \4 \1 \2|')
-    get_windowinfo $WINDOWINFO
-    echo "Clicked window was ${THIS_W}x${THIS_H} "
-    read -p "Enter new WIDTHxHEIGHT and/or hit enter to continue. " NEW_WH
-    if [ "$NEW_WH" ] ; then
-	set_this_wh $NEW_WH
-    fi
-}
-
-do_grabxy ()
-{
-    echo "Top-left corner at ${THIS_X},${THIS_Y}"
-    OLD_IFS="$IFS"
-    IFS="${IFS},x"
-    read -p "Enter new X,Y offset and/or hit enter to continue." NEW_X NEW_Y
-    if [ "$NEW_X" ] ; then
-	echo "Got NEW X,Y ${NEW_X},${NEW_Y}"
-	THIS_X="$NEW_X"
-	THIS_Y="$NEW_Y"
-    fi
-    IFS=${OLD_IFS}
-    check_size $THIS_X $THIS_Y
-}
-
-do_coordinates ()
-{
-    if [ ! "$GRAB_W" ] ; then
-	do_grabarea
-	GRAB_W=${THIS_W}
-	GRAB_H=${THIS_H}
-    fi
-    if [ ! "$GRAB_X" ] ; then
-	do_grabxy
-	GRAB_X=${THIS_X}
-	GRAB_Y=${THIS_Y}
-    fi
 }
 
 
@@ -1026,7 +985,7 @@ case ${STREAM_TYPE} in
 	else
 	    query_outsize_screen
 	fi
-	do_coordinates
+	get_grabarea
 	if [ ! "$OUTSIZE" ] ; then
 	    OUT_W=${GRAB_W}
 	    OUT_H=${GRAB_H}
@@ -1117,7 +1076,7 @@ case ${STREAM_TYPE} in
 	if [ ! "$OUTSIZE" ] ; then
 	    set_outsize 504
 	fi
-	do_coordinates
+	get_grabarea
 	if [ "$OUT_H" -lt 360 ] ; then
 	    set_this 30 $FRATE
 	elif [ "$OUT_H" -lt 450 ] ; then
