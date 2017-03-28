@@ -4,6 +4,7 @@ PROGNAME="quickcast.sh"
 VERSION="0.5.0b2"
 CONFIGFILE="${HOME}/.quickcast"
 DATE=`date +%Y-%m-%d_%H%M%S`
+
 function show_usage() {
 USAGE="
 USAGE: ${PROGNAME} [options] <stream_type>
@@ -15,15 +16,15 @@ the user for the needed information.
       -h
           Output this help
       -b <Audio bitrate>
-          The bitrate for the audio encoder in kbps. 
-          The default is 48*<number of channels> for Twitch streams 
-          and 64*<number of channels> for everything else. 
+          The bitrate for the audio encoder in kbps.
+          The default is 48*<number of channels> for Twitch streams
+          and 64*<number of channels> for everything else.
       -c <Audio_channels>
           The number of audio channels 1 (mono) or 2 (stereo.)
            The default is 1 for Twitch streams and 2 for everthing else.
       -C <CBR>
-          The 'constant bit rate' setting for the video in kbps. Note that 
-          this is not true CBR, the encoder will attempt to gravitate toward 
+          The 'constant bit rate' setting for the video in kbps. Note that
+          this is not true CBR, the encoder will attempt to gravitate toward
           this setting though. This only makes sense for Twitch.tv streams
           since they seem to insist on this non-sense. If omitted then mode
           is not used, just the maxrate setting, (See -M) which is what they
@@ -31,7 +32,7 @@ the user for the needed information.
           This overides the -M setting.
       -g <screen-capture-dimensions>
           Sets the screen grab capture dimensions of the form WIDTHxHEIGHT
-          If omitted it is selected interactively via clicking on the 
+          If omitted it is selected interactively via clicking on the
           desired window for Twitch streams or for Screen captures, and
           no screen is grabbed for everythihg else.
       -i <input-video-dimensions>
@@ -40,11 +41,11 @@ the user for the needed information.
           The default is ${DEFAULT_CAMSIZE}. The default and the video
           sizes can be set in the config file.
       -K <streaming-key>
-          The streaming key to use for the YouTube or Twitch stream 
+          The streaming key to use for the YouTube or Twitch stream
           (the option is ignored otherwise.) By default the proper key
           is selected from ${CONFIGFILE}
       -M <max-bitrate>
-          The max bitrate of the video encoder in kbps, the default depends 
+          The max bitrate of the video encoder in kbps, the default depends
           on the stream type. (around 600 for YouTube and Twitch streams)
           Remember to add the audio bitrate to this if you want to determine
           what the final bitrate will be. Overridden by the -C setting
@@ -61,11 +62,11 @@ the user for the needed information.
       -Q <quality-preset>
           One of ultrafast, superfast, veryfast, faster, fast, medium,
           slow, slower, veryslow. The default depends on the stream
-          type.  faster is easier on the CPU for a given bitrate
-          although the result will be a bigger file (and more stream
-          bandwidth). If the fps isn't keeping up with the desired
-          number either increase this preset, or lower the video
-          size.
+          type.  Faster is easier on the CPU for a given bitrate though
+          the image will be a lower quality. If the fps isn't keeping
+          up with the desired number then either 'speed up' this preset,
+          or lower the video size. On the other hand if you're not having
+          that problem but want better quality then 'slow down' this value.
       -r <vrate>
           The video frame rate. If omitted defaults depends on the output
           video size configuration and mode.
@@ -137,7 +138,7 @@ set_this ()
 {
     DEFAULT=${1}
     REQUESTED=${2}
-    if [ $REQUESTED ] ; then 
+    if [ $REQUESTED ] ; then
 	THIS=${REQUESTED}
     else
 	THIS=${DEFAULT}
@@ -157,45 +158,45 @@ set_outsize ()
 	    OUT_W=640
 	    OUT_H=360
 	    ;;
-	450) 
+	450)
 	    OUT_W=800
 	    OUT_H=450
-	    ;; 
+	    ;;
 	480p)
-	    # Using the 864x480 my logitech cam does. 
+	    # Using the 864x480 my logitech cam does.
 	    # Maybe should use 'hd480' (852x480) though?
 	    OUT_W=864
 	    OUT_H=480
 	    ;;
-	504) 
+	504)
 	    OUT_W=896
 	    OUT_H=504
-	    ;; 
-	540) 
+	    ;;
+	540)
 	    OUT_W=960
 	    OUT_H=540
-	    ;; 
-	576) 
+	    ;;
+	576)
 	    # Another 16x9 logitech cam size
-	    # Given my current set up this is probably the largest I should 
+	    # Given my current set up this is probably the largest I should
 	    # even think about streaming to twitch
 	    OUT_W=1024
 	    OUT_H=576
-	    ;; 
-	720p) 
+	    ;;
+	720p)
 	    # aka hd720. My logitech cam can only do 10fps at this size
 	    OUT_W=1280
 	    OUT_H=720
 	    ;;
-	900) 
+	900)
 	    OUT_W=1600
 	    OUT_H=900
-	    ;; 
-	1008) 
+	    ;;
+	1008)
 	    OUT_W=1792
 	    OUT_H=1008
-	    ;; 
-	1080p) 
+	    ;;
+	1080p)
 	    # aka hd1080
 	    OUT_W=1920
 	    OUT_H=1080
@@ -204,7 +205,7 @@ set_outsize ()
 	    OUT_W=640
 	    OUT_H=360
 	    #echo "Not a recognized output size setting -o $1." >&2
-	    #echo "$USAGE" 
+	    #echo "$USAGE"
 	    #exit 1
 	    ;;
     esac
@@ -389,21 +390,21 @@ do_twitch ()
     echo " -- Type q + enter to quit. --"
     # An effort to no go over 2 sec keyframes that Twitch complains about
     # divide by 1 to make it an integer, setting GOP to VRATE*2 still
-    # resulted in twitch complaining about max key intervals  being 
+    # resulted in twitch complaining about max key intervals  being
     # 3 seconds or more!
     GOP=$(echo "(${VRATE}*1.33)/1" | bc)
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
-    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k" 
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
     VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
-    OUTFMT="-f flv" 
-    if [ "$TEST" ] ; then 
+    OUTFMT="-f flv"
+    if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
 	echo "Saving to test stream file: ${OUTPUT}"
-    else 
+    else
 	OUTPUT="${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
@@ -411,7 +412,7 @@ do_twitch ()
 	${ACODEC} ${VCODEC} \
 	-force_key_frames "${KFRAMES}" -pix_fmt yuv420p -g $GOP \
 	${OUTFMT} "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
-} 
+}
 
 do_twitchcam ()
 {
@@ -419,13 +420,13 @@ do_twitchcam ()
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
-    echo 
+    echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
     echo "     webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
-    if [ "$TEST" ] ; then 
+    if [ "$TEST" ] ; then
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
     else
@@ -439,15 +440,15 @@ do_twitchcam ()
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
-    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k" 
+    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
     VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
     OUTFMT="-f flv"
-    if [ "$TEST" ] ; then 
+    if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
 	echo "Saving to test stream file: ${OUTPUT}"
-    else 
+    else
 	OUTPUT="${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} -f x11grab ${SCREEN} ${CAM} \
@@ -573,7 +574,7 @@ function query_outsize_twitch() {
 	"540" "960x540 -- fps 10" OFF \
 	"576" "1024x576 -- fps 10" OFF \
 	"720p" "1280x720 -- fps 10" OFF \
-	3>&1 1>&2 2>&3); 
+	3>&1 1>&2 2>&3);
     then
 	set_outsize $OUTSIZE
     fi
@@ -619,7 +620,7 @@ function query_audio() {
     STAT2=OFF
     STAT3=OFF
     STAT4=OFF
-    #if [ ! "$AB" ]; then 
+    #if [ ! "$AB" ]; then
     case $AB in
 	48)
 	    STAT1=ON
@@ -646,7 +647,7 @@ function query_audio() {
 
 function query_video() {
     #quality-preset #ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
-    #vrate # 
+    #vrate #
     #tune-setting # film, animation or zerolatency
     #CBR # 'constant bit rate' setting for the video in kbps.
     #echo "VIDEO STUB"
@@ -664,7 +665,7 @@ function query_video() {
 	    STAT1=ON
 	    ;;
 	superfast)
-	    STAT2=ON	    
+	    STAT2=ON
 	    ;;
 	veryfast)
 	    STAT3=ON
@@ -793,7 +794,7 @@ YOUTUBEKEY=xxxx-xxxx-xxxx-xxxx
 FFMPEG="ffmpeg -y -loglevel info"
 #FFMPEG="/usr/bin/ffmpeg -y -loglevel info"
 
-# Tou probably have more uplink then me and should raise this number, 
+# Tou probably have more uplink then me and should raise this number,
 # it's in kilobits/sec
 BANDWIDTH="650"
 
@@ -814,7 +815,7 @@ AENCODE=libmp3lame
 #AENCODE=libfdk_aac
 
 # If you have v4l2-ctl (found in the v4l-utils package in Debian) you
-# run this command to figure out the sizes toyr webcam supports.
+# run this command to figure out the sizes your webcam supports.
 # v4l2-ctl --list-formats-ext | grep Size: | awk '{print \$3}' | sort -n| uniq
 # Supported input video sizes seporated by space:
 CAMSIZES="176x144 352x288 432x240 640x360 640x480 800x600 864x480 1024x576 1280x720"
@@ -854,10 +855,9 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
 	    exit 0
 	    ;;
 	h)
-	    #echo "$USAGE"
 	    show_usage
 	    echo "Current list of configured stream names:"
-	    for stream in ${STREAM_TYPES}; do 
+	    for stream in ${STREAM_TYPES}; do
 		echo "  * $stream ${STREAM_DESCS[$stream]}"
 	    done
 	    echo "Example use: ${0} -o 360p youtube"
@@ -1016,7 +1016,7 @@ case ${STREAM_TYPE} in
 	    QUALITY="veryfast"
 	fi
 	if [ "${CBR}" ] ; then
-	    BRATE="-b:v ${CBR}k -minrate ${CBR}k -maxrate ${CBR}k -bufsize ${CBR}k" 
+	    BRATE="-b:v ${CBR}k -minrate ${CBR}k -maxrate ${CBR}k -bufsize ${CBR}k"
 	elif [ "${MAXRATE}" ] ; then
 	    BRATE="-maxrate ${MAXRATE}k -bufsize ${MAXRATE}k"
 	else
@@ -1054,7 +1054,7 @@ case ${STREAM_TYPE} in
 	    set_this 24 $FRATE
 	elif [ $CAM_H -lt 720 ] ; then
 	    set_this 15 $FRATE
-	else 
+	else
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
@@ -1096,7 +1096,7 @@ case ${STREAM_TYPE} in
 	    set_this 15 $FRATE
 	elif [ "$OUT_H" -gt 720 ] ; then
 	    set_this 5 $FRATE
-	else 
+	else
 	    set_this 10 $FRATE
 	fi
 	VRATE=${THIS}
