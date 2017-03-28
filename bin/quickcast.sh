@@ -501,7 +501,7 @@ function query_webcam ()
          ratio=$(echo $s | sed 's|x|/|')
          if [ $s = $DEFAULT_CAMSIZE ]
          then
-             if [ ! $CHECKED -eq 1 ] 
+             if [ ! $CHECKED -eq 1 ]
              then echo $s $(echo "scale=2; $ratio"|bc) ON; CHECKED=1
              else echo $s $(echo "scale=2; $ratio"|bc) OFF
              fi
@@ -528,14 +528,14 @@ function query_outsize() {
 	"240p" "432x240 -- fps 24" OFF \
 	"360p" "640x360 -- fps 24" ON \
 	"480p" "864x480 -- fps 24" OFF \
-	"720p" "1280x720 -- fps 10" OFF 3>&1 1>&2 2>&3); 
+	"720p" "1280x720 -- fps 10" OFF 3>&1 1>&2 2>&3);
     then
 	set_outsize $OUTSIZE
     fi
 }
 
 function query_outsize_twitch() {
-# For use with twitch.tv 
+# For use with twitch.tv
 #   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
     if OUTSIZE=$($dialog --title "Video Encoder Settings" --radiolist \
 	"Choose dimensions for the streaming video:" 20 60 8 \
@@ -560,16 +560,16 @@ function query_outsize_screen() {
 	"Choose dimensions for the output video:" 18 60 11 \
 	"240p" "432x240 -- fps 30" OFF \
 	"360p" "640x360 -- fps 30" OFF \
-	"450" "800x450 -- fps 24" ON \
+	"450" "800x450 -- fps 24" OFF \
 	"480p" "864x480 -- fps 20" OFF \
 	"504" "896x504 -- fps 20" OFF \
 	"540" "960x540 -- fps 20" OFF \
 	"576" "1024x576 -- fps 15" OFF \
-	"720p" "1280x720 -- fps 15" OFF \
+	"720p" "1280x720 -- fps 15" ON \
 	"900" "1600x900 -- fps 10" OFF \
 	"1008" "1792x1008 -- fps 10" OFF \
-	"1080p" "1920x1080 -- fps 10" OFF \
-	3>&1 1>&2 2>&3); 
+	"1080p" "1920x1080 -- fps 15" OFF \
+	3>&1 1>&2 2>&3);
     then
 	set_outsize $OUTSIZE
     fi
@@ -602,7 +602,7 @@ function query_audio() {
 	    STAT2=ON
 	    ;;
 	96)
-	    STAT3=ON	    
+	    STAT3=ON
 	    ;;
 	128)
 	    STAT4=ON
@@ -679,7 +679,7 @@ function query_video() {
 
 function query_stream() {
     #max-bitrate #  600 for YouTube and Twitch
-    #streaming-key # 
+    #streaming-key #
     #stream_url # rtmp://example.com/path
     if CHOICE=$($dialog --title "Stream Settings" --inputbox \
 	"Url for the stream?" 10 60 ${URL} \
@@ -752,12 +752,15 @@ cat > ${CONFIGFILE} <<EOF
 #### Twich.tv
 TWITCH_URL="rtmp://live.twitch.tv/app"
 # Twich.tv just uses one key
-TWITCHKEY=AAAA_DDDDDDDD_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#TWITCHKEY=live_00000000_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWITCHKEY=\$(printenv TWITCH_KEY)
+# live_0000000_xxxxxxxxxxxx?bandwidthtest=true
 
 #### YouTube.com
 YOUTUBE_URL="rtmp://a.rtmp.youtube.com/live2"
 # youtube now uses one key too
-YOUTUBEKEY=xxxx-xxxx-xxxx-xxxx
+#YOUTUBEKEY=xxxx-xxxx-xxxx-xxxx
+YOUTUBEKEY=\$(printenv YOUTUBE_KEY)
 
 #### Other configuration variables
 
@@ -832,8 +835,11 @@ function check_dialog() {
 
 #### main ####
 
-echo ${VERSION}
-check_setup
+# get the size of the root window
+ROOTSCRN=$(xwininfo -root | awk '/-geo/{print $2}' | sed 's|\([0-9]*\)x\([0-9]*\).*|\1 \2|')
+get_windowinfo ${ROOTSCRN}
+ROOTW=$THIS_W
+ROOTH=$THIS_H
 
 STREAM_TYPES="camcap youtube screencap twitch twitchcam"
 declare -A STREAM_DESCS
@@ -930,7 +936,7 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
 	    ;;
 	:)
 	    echo "Option -$OPTARG requires a argument."  >&2
-	    echo "$USAGE" 
+	    echo "$USAGE"
 	    exit 1
 	    ;;
     esac
@@ -954,7 +960,7 @@ else
 fi
 
 case ${STREAM_TYPE} in
-# camcap youtube screencap twitch twitchcam 
+# camcap youtube screencap twitch twitchcam
     camcap)
 	if [ ! "${QUALITY}" ] ; then
 	    QUALITY="faster"
