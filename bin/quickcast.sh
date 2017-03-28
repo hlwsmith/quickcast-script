@@ -338,7 +338,11 @@ do_youtube ()
     let GOP=(VRATE*2)
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
-    ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
+    if [ $AENCODE = "libfdk_aac" ]; then
+	ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
+    else
+	ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k "
+    fi
     VCODEC="-c:v libx264 ${VSIZE} -r:v ${VRATE} -preset ${QUALITY} ${BRATE}"
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
