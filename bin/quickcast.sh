@@ -802,7 +802,7 @@ DEFAULT_CAMSIZE=640x480
 EOF
 }
 
-function check_setup() {
+function check_config() {
     if [ ! -s ${CONFIGFILE} ]
     then make_config
     fi
@@ -849,6 +849,8 @@ STREAM_DESCS[screencap]=" - Grab part of the screen and save locally."
 STREAM_DESCS[twitch]="    - Grab part of the screen and stream to Twitch.tv."
 STREAM_DESCS[twitchcam]=" - Same as 'twitch' with cam inset at lower left."
 
+check_config
+
 # why can't I put this option parsing into a fucntion?
 while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
     case $opt in
@@ -876,8 +878,15 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
 	    CBR=$OPTARG
 	    ;;
 	g)
-	    GRABSIZE=$OPTARG
-	    set_this_wh $OPTARG
+	    if [ "$OPTARG" = "FULL" ]; then
+		GRABSIZE=${ROOTW}x${ROOTH}
+		GRAB_X=0
+		GRAB_Y=0
+		echo "GRABSIZE $GRABSIZE"
+	    else
+		GRABSIZE=$OPTARG
+	    fi
+	    set_this_wh $GRABSIZE
 	    GRAB_W=$THIS_W
 	    GRAB_H=$THIS_H
 	    ;;
