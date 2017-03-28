@@ -20,13 +20,14 @@ so it is hard to actually test this aspect.
 
 ## New feature
 
-This now uses whiptail for a dialog type of text user interface. I
-think whiptail is installed by default of Debian based systems (or do
-apt-get install whiptail).
+This now uses `whiptail` or `dialog` for user text dialog
+interface. It _should_ choose the one that's installed automatically
+(hopefully). I've *not* actually tested with `dialog` though.
 
-You can avoid the dialogs by supplying ALL the needed information with
-the command invocation along with the -S flag (to Skip the final
-advanced option screen).
+You can avoid the dialogs by supplying the needed information with the
+command invocation along with the -S flag (to Skip the final advanced
+option screen). Also it will still work all from the command line with
+neither `whiptail` or `dialog` installed.
 
 ## Requirements
 
@@ -69,7 +70,16 @@ all the real work, so you'll need to make sure they are installed.
 
 - `quickcast.sh twitch`
 - `quickcast.sh twitchcam`
-  
+
+## TODO's
+
+- Actually test on twitch
+
+- Make position of the twitch cam (currently hard coded into lower
+  left) configurable.
+
+- Finish making this TODO list.. probably will be long!
+
 ## The future
 
 First off is mostly testing, fixing the dozens of bugs and improving
