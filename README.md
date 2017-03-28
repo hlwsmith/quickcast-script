@@ -28,13 +28,35 @@ You can avoid the dialogs by supplying ALL the needed information with
 the command invocation along with the -S flag (to Skip the final
 advanced option screen).
 
+## Requirements
+
+Being just a shell script this calls other command line programs to do
+all the real work, so you'll need to make sure they are installed.
+
+  - `ffmpeg` I usually build my own using
+    [this Compilation Guide](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu).
+    However this script _should_ work with most newer ffmpeg binaries
+    packaged with your distro.
+
+  - `xwininfo` (in the x11-utils package) which is used to get screen
+    and window sizes and placements for screen capturing.
+
+  - `v4l2-ctl` (in the v4l-utils package) is handy to have to
+    determine your webcam's capabilities and output size information.
+    This is optional, just configure the config file with working
+    information.
+  
+  - `whiptail` or `dialog` for the UI dialog boxes (I've only tested
+    with whiptail but it _should_ work the same with both). However
+    you can enter all the parameters on the command line too so this
+    is also optional.
+
 ## The future
 
-In the future I plan to add support for the 'dialog' backend and let
-the script determine which one is installed to use the proper one
-('whiptail' or 'dialog').
+First off is mostly testing, fixing the dozens of bugs and improving
+the usability.
 
-And further in the future rewrite the whole thing in
+And further in the future rewriting the whole thing in
 [Go](https://golang.org/).
 
 -- Harvey Smith
