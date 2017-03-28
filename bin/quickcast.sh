@@ -230,46 +230,71 @@ get_windowinfo ()
     else
 	THIS_Y="0"
     fi
-    #echo "Got window info ${THIS_W}x${THIS_H} : ${THIS_X},${THIS_Y}"
+    echo "Got window info ${THIS_W}x${THIS_H} : ${THIS_X},${THIS_Y}"
 }
 
-# get the size of the root window
-ROOTSCRN=$(xwininfo -root | awk '/-geo/{print $2}' | sed 's|\([0-9]*\)x\([0-9]*\).*|\1 \2|')
-get_windowinfo ${ROOTSCRN}
-ROOTX=$THIS_W
-ROOTY=$THIS_H
-
-check_size () 
+get_grabarea()
+# was do_coordinates ()
 {
-    let XTOT=${1}+CAP_XSIZE
-    if [ $ROOTX -lt $XTOT ] ; then
-	let THIS_X=ROOTX-CAP_XSIZE
-	echo "XTOT to big at ${XTOT} adjusting X offest to ${THIS_X}"
-    else
-	echo "XTOT is good to go at ${XTOT}"
+    # gets the width and height
+    if [ ! "$GRAB_W" ] ; then
+	echo "Click the mouse on the window you wish to capture"
+	WINDOWINFO=$(echo $(xwininfo| awk '/ Width| Height| Corners/{print $2 }') | sed 's|\([0-9]*\) \([0-9]*\) +\([0-9]*\)+\([0-9]*\).*|\1 \2 \3 \4|')
+	get_windowinfo $WINDOWINFO
+	echo "Clicked window was ${THIS_W}x${THIS_H} "
+	read -p "Enter new WIDTHxHEIGHT and/or hit enter to continue. " NEW_WH
+	if [ "$NEW_WH" ] ; then
+	    set_this_wh $NEW_WH
+	fi
+	GRAB_W=${THIS_W}
+	GRAB_H=${THIS_H}
     fi
-    let YTOT=${2}+CAP_YSIZE
-    if [ $ROOTY -lt $YTOT ] ; then
-	let THIS_Y=ROOTY-CAP_YSIZE
-	echo "YTOT to big at ${YTOT} adjusting Y offest to ${THIS_Y}"
-    else
-	echo "YTOT is good to go at ${YTOT}"
+    if [ ! "$GRAB_X" ] ; then
+	# was do_grabarea()
+	# get's top left corner offset from top left of root window
+	echo "Top-left corner at ${THIS_X},${THIS_Y}"
+	OLD_IFS="$IFS"
+	IFS="${IFS},x"
+	read -p "Enter new X,Y offset and/or hit enter to continue." NEW_X NEW_Y
+	if [ "$NEW_X" ] ; then
+	    echo "Got NEW X,Y ${NEW_X},${NEW_Y}"
+	    THIS_X="$NEW_X"
+	    THIS_Y="$NEW_Y"
+	    # was check_size() $THIS_X $THIS_Y
+	    let XTOT=THIS_X+GRAB_W
+	    if [ $ROOTW -lt $XTOT ] ; then
+		let THIS_X=ROOTW-GRAB_W
+		echo "XTOT to big at ${XTOT} adjusting X offest to ${THIS_X}"
+	    else
+		echo "XTOT is good to go at ${XTOT}"
+	    fi
+	    let YTOT=THIS_Y+GRAB_H
+	    if [ $ROOTH -lt $YTOT ] ; then
+		let THIS_Y=ROOTH-GRAB_H
+		echo "YTOT to big at ${YTOT} adjusting Y offest to ${THIS_Y}"
+	    else
+		echo "YTOT is good to go at ${YTOT}"
+	    fi
+	fi
+	IFS=${OLD_IFS}
+	GRAB_X=${THIS_X}
+	GRAB_Y=${THIS_Y}
     fi
 }
 
 do_camcap ()
 {
     NAME="camcap"
-    OUTFILE="${NAME}_${DATE}.avi"
+    OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
-    echo 
+    echo
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam "
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     echo "       File: ${OUTFILE}"
     echo " --------------------- "
-    echo 
+    echo
     read -p "Hit any key to continue."
     echo " -- Type q to quit.-- "
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
@@ -284,21 +309,21 @@ do_camcap ()
 	"${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
 }
 
-do_youtube () 
+do_youtube ()
 {
     NAME="youtube"
-    OUTFILE="${NAME}_${DATE}.avi"
+    OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
-    echo 
+    echo
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam"
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
-    if [ "$TEST" ] ; then 
+    if [ "$TEST" ] ; then
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
     else
-	echo "      Stream: ${URL}/${KEY}"
+	echo "     Stream: ${URL}/${KEY}"
     fi
     echo "       File: ${OUTFILE}"
     echo " --------------------- "
@@ -333,9 +358,9 @@ do_screencap ()
     NAME="screencap"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
-    OUTFILE="${NAME}_${DATE}.avi"
+    OUTFILE="${NAME}_${DATE}.mkv"
     echo "  Using stream setup ${NAME}."
-    echo 
+    echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
     echo "      Video: ${OUT_W}x${OUT_H} (${QUALITY})"
@@ -360,16 +385,16 @@ do_screencap ()
 do_twitch ()
 {
     NAME="twitch"
-    OUTFILE="${NAME}_${DATE}.avi"
+    OUTFILE="${NAME}_${DATE}.mkv"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
-    echo 
+    echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
-    if [ "$TEST" ] ; then 
+    if [ "$TEST" ] ; then
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
     else
