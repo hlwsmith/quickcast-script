@@ -110,14 +110,6 @@ the user for the needed information.
 echo "$USAGE"
 }
 
-STREAM_TYPES="camcap youtube screencap twitch twitchcam"
-declare -A STREAM_DESCS
-STREAM_DESCS[camcap]="    - Capture the webcam and save locally."
-STREAM_DESCS[youtube]="   - Same as 'camcap' but stream it to YouTube.com too."
-STREAM_DESCS[screencap]=" - Grab part of the screen and save locally."
-STREAM_DESCS[twitch]="    - Grab part of the screen and stream to Twitch.tv."
-STREAM_DESCS[twitchcam]=" - Same as 'twitch' with cam inset at lower left."
-
 set_this_wh ()
 {
     WxH=$(echo $1 | sed 's/x/ /')
@@ -847,6 +839,15 @@ function check_setup() {
 
 echo ${VERSION}
 check_setup
+
+STREAM_TYPES="camcap youtube screencap twitch twitchcam"
+declare -A STREAM_DESCS
+STREAM_DESCS[camcap]="    - Capture the webcam and save locally."
+STREAM_DESCS[youtube]="   - Same as 'camcap' but stream it to YouTube.com too."
+STREAM_DESCS[screencap]=" - Grab part of the screen and save locally."
+STREAM_DESCS[twitch]="    - Grab part of the screen and stream to Twitch.tv."
+STREAM_DESCS[twitchcam]=" - Same as 'twitch' with cam inset at lower left."
+
 # why can't I put this option parsing into a fucntion?
 while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
     case $opt in
