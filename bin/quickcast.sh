@@ -347,14 +347,14 @@ do_youtube ()
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     if [ "$TEST" ] ; then
-	OUTPUT="${SAVEDIR}/${OUTFILE}|${SAVEDIR}/test_${NAME}.f4v"
-	echo "Saving to test stream file: ${OUTPUT}"
+	TEEOUT="${OUTPUT}|${SAVEDIR}/test_${NAME}.f4v"
+	echo "Saving to test stream file: ${TEEOUT}"
     else
-	OUTPUT="${SAVEDIR}/${OUTFILE}|[f=flv]${URL}/${KEY}"
+	TEEOUT="${OUTPUT}|[f=flv]${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} -pix_fmt yuv420p -g ${GOP} \
-	${OUTFMT} "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
+	${OUTFMT} "${TEEOUT}" 2>${SAVEDIR}/${NAME}.log
 }
 
 do_screencap ()
