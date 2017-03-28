@@ -479,20 +479,6 @@ do_twitchcam ()
 	${OUTFMT} "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
 }
 
-
-if [ ! $1 ]; then
-    STREAM_TYPE=$(whiptail --title "Select a Stream Type" --menu \
-	"Choose a Stream Type from the list:" 12 72 5 \
-	"camcap" "Capture the webcam and save locally " \
-	"youtube" "Like camcap also streaming to YouTube.com " \
-	"screencap" "Screen grab and save locally " \
-	"twitch" "Like screencap also streaming to Twitch.tv " \
-	"twitchcam" "Like twitch with webcam inset at lower left " \
-	3>&1 1>&2 2>&3)
-else
-    STREAM_TYPE=${1}
-fi
-
 function query_webcam ()
 # CAMSIZES and DEFAULT_CAMSIZE are set the the config file
 {
@@ -502,6 +488,13 @@ function query_webcam ()
        CAMSIZES="176x144 640x360 640x480"
        DEFAULT_CAMSIZE=640x480
        MSG="Camera sizes NOT set in config file! "
+    fi
+    if [ ! "$dialog" ]; then
+	if [ ! "$CAM_W" ]; then
+	    set_this_wh $DEFAULT_CAMSIZE
+	    CAM_W=$THIS_W
+	    CAM_H=$THIS_H
+	fi
     fi
     menu=$(for s in $CAMSIZES
        do
@@ -516,7 +509,7 @@ function query_webcam ()
          fi
        done
        )
-    if INSIZE=$(whiptail --title "Input Video Dimensions" \
+    if INSIZE=$($dialog --title "Input Video Dimensions" \
 	--nocancel --radiolist \
         "${MSG}Choose dimensions for the video camera:" 15 60 8 \
         $menu 3>&1 1>&2 2>&3);
@@ -529,7 +522,7 @@ function query_webcam ()
 
 function query_outsize() {
 # For use with YouTube 240p 360p 480p 720p
-    if OUTSIZE=$(whiptail --title "Output Video Dimensions" \
+    if OUTSIZE=$($dialog --title "Output Video Dimensions" \
 	--nocancel --radiolist \
 	"Choose dimensions for the streaming video:" 12 60 4 \
 	"240p" "432x240 -- fps 24" OFF \
@@ -544,7 +537,7 @@ function query_outsize() {
 function query_outsize_twitch() {
 # For use with twitch.tv 
 #   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
-    if OUTSIZE=$(whiptail --title "Video Encoder Settings" --radiolist \
+    if OUTSIZE=$($dialog --title "Video Encoder Settings" --radiolist \
 	"Choose dimensions for the streaming video:" 20 60 8 \
 	"240p" "432x240 -- fps 30" OFF \
 	"360p" "640x360 -- fps 20" OFF \
@@ -563,8 +556,8 @@ function query_outsize_twitch() {
 function query_outsize_screen() {
 # For use with screen grabs
 #   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
-    if OUTSIZE=$(whiptail --title "Video Encoder Settings" --radiolist \
-	"Choose dimensions for the streaming video:" 18 60 11 \
+    if OUTSIZE=$($dialog --title "Video Encoder Settings" --radiolist \
+	"Choose dimensions for the output video:" 18 60 11 \
 	"240p" "432x240 -- fps 30" OFF \
 	"360p" "640x360 -- fps 30" OFF \
 	"450" "800x450 -- fps 24" ON \
@@ -590,7 +583,7 @@ function query_audio() {
 	STAT1=OFF
 	STAT2=ON
     fi
-    CHOICE=$(whiptail --title "Audio Options" --radiolist --nocancel \
+    CHOICE=$($dialog --title "Audio Options" --radiolist --nocancel \
 	"Choose number of audio channels:" 10 60 2 \
 	"1" "Mono " $STAT1 \
 	"2" "Stereo " $STAT2 \
@@ -615,7 +608,7 @@ function query_audio() {
 	    STAT4=ON
 	    ;;
     esac
-    CHOICE=$(whiptail --title "Audio Options" --radiolist --nocancel \
+    CHOICE=$($dialog --title "Audio Options" --radiolist --nocancel \
 	"Choose bitrate in kbps from list:" 10 60 4 \
 	"48" "48 kbps " $STAT1 \
 	"64" "64 kbps " $STAT2 \
@@ -669,7 +662,7 @@ function query_video() {
 	    STAT9=ON
 	    ;;
     esac
-    CHOICE=$(whiptail --title "Video Encoder Options" --radiolist \
+    CHOICE=$($dialog --title "Video Encoder Options" --radiolist \
 	"Choose a quality preset (faster is easier on the CPU):" 18 60 9 \
 	"ultrafast" "ultrafast" $STAT1 \
 	"superfast" "superfast" $STAT2 \
@@ -688,7 +681,7 @@ function query_stream() {
     #max-bitrate #  600 for YouTube and Twitch
     #streaming-key # 
     #stream_url # rtmp://example.com/path
-    if CHOICE=$(whiptail --title "Stream Settings" --inputbox \
+    if CHOICE=$($dialog --title "Stream Settings" --inputbox \
 	"Url for the stream?" 10 60 ${URL} \
 	3>&1 1>&2 2>&3); then
 	URL="$CHOICE"
@@ -696,7 +689,7 @@ function query_stream() {
 	echo "Operation Canceled."
 	exit
     fi
-    if CHOICE=$(whiptail --title "Stream Settings" --inputbox \
+    if CHOICE=$($dialog --title "Stream Settings" --inputbox \
 	"The key for the stream?" 10 60 ${KEY} \
 	3>&1 1>&2 2>&3); then
 	KEY="$CHOICE"
@@ -704,7 +697,7 @@ function query_stream() {
 	echo "Operation Canceled."
 	exit
     fi
-    if CHOICE=$(whiptail --title "Stream Settings" --inputbox \
+    if CHOICE=$($dialog --title "Stream Settings" --inputbox \
 	"Uplink bandwidth in kbps?" 10 60 ${BANDWIDTH} \
 	3>&1 1>&2 2>&3); then
 	BANDWIDTH="$CHOICE"
@@ -712,7 +705,7 @@ function query_stream() {
 	echo "Operation Canceled."
 	exit
     fi
-    if whiptail --title "Stream Settings" --yesno --defaultno \
+    if $dialog --title "Stream Settings" --yesno --defaultno \
 	"Is this a test run" 10 60; then
 	TEST=True
     else
@@ -721,7 +714,7 @@ function query_stream() {
 }
 
 function query_options_local() {
-    if OPTIONS=$(whiptail --title "Options" \
+    if OPTIONS=$($dialog --title "Options" \
 	--nocancel --checklist \
 	"Choose Advanced Options to Configure:" 12 60 3 \
 	"audio" "Audio Settings (${AC} channels at ${AB}kbps)" OFF \
@@ -735,7 +728,7 @@ function query_options_local() {
 }
 
 function query_options_stream() {
-    if OPTIONS=$(whiptail --title "Options" \
+    if OPTIONS=$($dialog --title "Options" \
 	--nocancel --checklist \
 	"Choose Advanced Options to Configure:" 12 60 4 \
 	"audio" "Audio Settings (${AC} channels at ${AB}kbps)" OFF \
@@ -820,6 +813,20 @@ function check_setup() {
 	# SAVEDIR doesn't exist so make it
 	echo "Creating save directory ${SAVEDIR}"
 	mkdir ${SAVEDIR}
+    fi
+}
+
+function check_dialog() {
+    # check whether whiptail or dialog is installed
+    # (choosing the first command found)
+    if [ ! "$SKIP" ]; then
+	read dialog <<< "$(basename $(which whiptail dialog) 2> /dev/null)"
+	echo "Got $dialog for the dialog backend"
+	# set the SKIP dialogs flag if none found
+	# the user could also set this on the command line
+	[[ "$dialog" ]] || {
+	    SKIP=True
+	}
     fi
 }
 
@@ -929,6 +936,22 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
     esac
 done
 shift $((OPTIND-1))
+
+check_dialog
+echo ${VERSION}
+
+if [[ ! ($1 || $SKIP) ]]; then
+    STREAM_TYPE=$(whiptail --title "Select a Stream Type" --menu \
+	"Choose a Stream Type from the list:" 12 72 5 \
+	"camcap" "Capture the webcam and save locally " \
+	"youtube" "Like camcap also streaming to YouTube.com " \
+	"screencap" "Screen grab and save locally " \
+	"twitch" "Like screencap also streaming to Twitch.tv " \
+	"twitchcam" "Like twitch with webcam inset at lower left " \
+	3>&1 1>&2 2>&3)
+else
+    STREAM_TYPE=${1}
+fi
 
 case ${STREAM_TYPE} in
 # camcap youtube screencap twitch twitchcam 
