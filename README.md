@@ -63,7 +63,7 @@ need that.
 - `quickcast.sh camcap` This will pop-up dialog boxes asking for the
   parameters.
 
-- `quickcast.sh -S camcap` This will 'Skip' the diolog boxes and just
+- `quickcast.sh -S camcap` This will 'Skip' the dialog boxes and just
   use the defaults, which you can tweak in your ~/.quickcast config
   file
 
@@ -76,16 +76,16 @@ need that.
   screen. Will pop up dialog asking for other parameters, such as the
   output size. More of the defaults should be in the config file, many
   of them are hard coded at the moment.. but hey, it's a shell script
-  so's is not THAT hard to alter ;-)
+  so it's not THAT hard to alter ;-)
 
 - `quickcast.sh screencap` This will ask you to click on the window
-  you want to capture (you can click on the desktop if you want ot
-  capture the whole thing). You have a chance to alter the coorinates
+  you want to capture (you can click on the desktop if you want to
+  capture the whole thing). You have a chance to alter the coordinates
   too.
 
 ### Live Streaming to YouTube
 
-- `quickcast.sh youtube` Pop up dialogs will ask for the details. It
+- `quickcast.sh youtube` Pop up dialogues will ask for the details. It
   can get your tube key from the environment variable YOUTUBE_KEY or
   you can keep it in your config file.
 
@@ -96,7 +96,7 @@ need that.
 
 - `quickcast.sh -i 864x480 -o 240p -S youtube` Just like the previous
   example except not a test this time. Skip (-S) any other popup
-  dialogs.
+  dialogues.
 
 ### Live Streaming to Twitch
 
@@ -119,13 +119,13 @@ need that.
 - Make position of the Twitch cam (currently hard coded into lower
   left) configurable.
 
-- Allow for more configuration and us less hardcoding of values in the
+- Allow for more configuration and us less hard-coding of values in the
   script.
 
-- Make just webcam streamable to Twitch since they allow all kinds of
+- Make just webcam stream-able to Twitch since they allow all kinds of
   content now, not only gamecasting.
 
-- And make screencasting live streamable to YouTube.com. 
+- And make screencasting live stream-able to YouTube.com. 
 
 - Finish making this TODO list, probably will be long!
 
