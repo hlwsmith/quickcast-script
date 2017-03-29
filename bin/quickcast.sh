@@ -389,7 +389,7 @@ do_screencap ()
 do_twitch ()
 {
     NAME="twitch"
-    OUTFILE="${NAME}_${DATE}.mkv"
+    #OUTFILE="${NAME}_${DATE}.mkv"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
@@ -404,7 +404,7 @@ do_twitch ()
     else
 	echo "      Stream: ${URL}/${KEY}"
     fi
-    echo "       File: ${OUTFILE}"
+    #echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
@@ -453,6 +453,7 @@ do_twitchcam ()
     else
 	echo "      Stream: ${URL}/${KEY}"
     fi
+    echo "      BRATE: ${BRATE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
@@ -462,7 +463,8 @@ do_twitchcam ()
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 18 ${BRATE} -r:v ${VRATE}"
+    #VCODEC="-c:v libx264 -preset veryslow -qp 0
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
     OUTFMT="-f flv"
@@ -1047,7 +1049,7 @@ case ${STREAM_TYPE} in
 	elif [ "${MAXRATE}" ] ; then
 	    BRATE="-maxrate ${MAXRATE}k -bufsize ${MAXRATE}k"
 	else
-	    BRATE="-maxrate ${BANDWIDTH}k -bufsize ${BANDWIDTH}k"
+	    BRATE="-maxrate ${BANDWIDTH}k -bufsize $((BANDWIDTH*2))k"
 	fi
 	;;&
     youtube)
