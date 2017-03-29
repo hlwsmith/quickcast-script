@@ -22,7 +22,7 @@ so it is hard to actually test this aspect.
 
 This now uses `whiptail` or `dialog` for user text dialog
 interface. It _should_ choose the one that's installed automatically
-(hopefully). I've *not* actually tested with `dialog` though.
+(hopefully). I've **not** actually tested with `dialog` though.
 
 You can avoid the dialogs by supplying the needed information with the
 command invocation along with the -S flag (to Skip the final advanced
@@ -56,29 +56,78 @@ all the real work, so you'll need to make sure they are installed.
 
 ### Webcam capture
 
-- `quickcast.sh camcap`
+I usually use Guvcview or Cheese myself as they offer a visual
+monitor of the camera. However this works simply enough if you don't
+need that.
+
+- `quickcast.sh camcap` This will pop-up dialog boxes asking for the
+  parameters.
+
+- `quickcast.sh -S camcap` This will 'Skip' the diolog boxes and just
+  use the defaults, which you can tweak in your ~/.quickcast config
+  file
+
+- `quickcast.sh -i 864x480 -S camcap` same but requesting the 864x480
+  input size from the camera. The output will be the same size.
 
 ### Screen Capturing
 
-- `quickcast.sh screencap`
+- `quickcast.sh -g FULL screencap` Does a screen capture of the full
+  screen. Will pop up dialog asking for other parameters, such as the
+  output size. More of the defaults should be in the config file, many
+  of them are hard coded at the moment.. but hey, it's a shell script
+  so's is not THAT hard to alter ;-)
+
+- `quickcast.sh screencap` This will ask you to click on the window
+  you want to capture (you can click on the desktop if you want ot
+  capture the whole thing). You have a chance to alter the coorinates
+  too.
 
 ### Live Streaming to YouTube
 
-- `quickcast.sh youtube`
+- `quickcast.sh youtube` Pop up dialogs will ask for the details. It
+  can get your tube key from the environment variable YOUTUBE_KEY or
+  you can keep it in your config file.
+
+- `quickcast.sh -i 864x480 -o 240p -t youtube` -o 240p sets the output
+  to YouTube, yea I don't have any uplink. This will also save a local
+  .mkv copy. The -t means test so it wont really send the to YouTube
+  but will also save a local .f4v of what would have been sent.
+
+- `quickcast.sh -i 864x480 -o 240p -S youtube` Just like the previous
+  example except not a test this time. Skip (-S) any other popup
+  dialogs.
 
 ### Live Streaming to Twitch
 
+  Twitch mode is like youtube only sends a screencast instead of the
+  webcam (and to twitch.tv instead of YouTube.com, obviously).  There
+  is also a `twitchcam` mode which insets the output of your webcam in
+  the lower left. I've not tested twitch mode for real in awhile. Like
+  youtube there is also a -t option (test) to save the output to a
+  local .fv4 file instead. The twitch mode does not normally save a
+  local .mkv copy though, as the youtube mode does.
+
 - `quickcast.sh twitch`
+
 - `quickcast.sh twitchcam`
 
 ## TODO's
 
-- Actually test on twitch
+- Actually test on Twitch.tv
 
-- Make position of the twitch cam (currently hard coded into lower
+- Make position of the Twitch cam (currently hard coded into lower
   left) configurable.
 
-- Finish making this TODO list.. probably will be long!
+- Allow for more configuration and us less hardcoding of values in the
+  script.
+
+- Make just webcam streamable to Twitch since they allow all kinds of
+  content now, not only gamecasting.
+
+- And make screencasting live streamable to YouTube.com. 
+
+- Finish making this TODO list, probably will be long!
 
 ## The future
 
