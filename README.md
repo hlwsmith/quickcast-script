@@ -123,7 +123,7 @@ need that.
 - `quickcast.sh -g FULL -i 320x240 -o 720p -S twitchcam` Stream the
   full screen to Twitch adding the webcam insert (currently in the
   lower right, but eventually which corner will be an option). The
-  output will be scaled scaled down to 720p (1280x720) and set to
+  output will be scaled down to 720p (1280x720) and sent to
   Twitch. Skip (-S) the pop up dialogues.
 
 ## TODO's
