@@ -14,20 +14,16 @@ there's no way to adjust the microphone settings. It seems stuck
 on 44.1 khz (oh, and the 90's called and wanted their sample rate
 back!)
 
-Also in theory you can stream live to YouTube or Twitch using this,
-though I've not tested Twitch at all recently. My uplink is horrible
-so it is hard to actually test this aspect.
+Also can stream live to YouTube or Twitch using this.
 
-## New feature
+Basically what it does is take a command line like:
 
-This now uses `whiptail` or `dialog` for user text dialog
-interface. It _should_ choose the one that's installed automatically
-(hopefully). I've **not** actually tested with `dialog` though.
+`quickcast -g 1792x1008 -o 504 -Q veryslow twitchcam`
 
-You can avoid the dialogs by supplying the needed information with the
-command invocation along with the -S flag (to Skip the final advanced
-option screen). Also it will still work all from the command line with
-neither `whiptail` or `dialog` installed.
+To construct and run the actual ffmpeg command:
+
+`ffmpeg -y -loglevel info -f alsa -ar 48000 -i pulse -f x11grab -video_size 1792x1008 -i :0.0+0,28 -f v4l2 -video_size 176x144 -i /dev/video0 -filter_complex [1:v]scale=896x504,setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out] -map [out] -map 0:a -c:a libmp3lame -ac 1 -ab 48k -c:v libx264 -preset veryslow -crf 23 -maxrate 650k -bufsize 1300k -r:v 10 -force_key_frames expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2)) -pix_fmt yuv420p -g 18 -f flv rtmp://live.twitch.tv/app/live_xxxxxxxx`
+
 
 ## Requirements
 
@@ -51,6 +47,19 @@ all the real work, so you'll need to make sure they are installed.
   with whiptail but it _should_ work the same with both). However
   you can enter all the parameters on the command line too so this
   is also optional.
+
+
+## Features
+
+Uses `whiptail` or `dialog` for user text dialog interface. It
+_should_ choose the one that's installed automatically
+(hopefully). I've **not** actually tested with `dialog` though.
+
+You can avoid the dialogs by supplying the needed information with the
+command invocation along with the -S flag (to Skip the final advanced
+option screen). Also it will still work all from the command line with
+neither `whiptail` or `dialog` installed.
+
 
 ## Examples:
 
@@ -91,8 +100,9 @@ need that.
 
 - `quickcast.sh -i 864x480 -o 240p -t youtube` -o 240p sets the output
   to YouTube, yea I don't have any uplink. This will also save a local
-  .mkv copy. The -t means test so it wont really send the to YouTube
-  but will also save a local .f4v of what would have been sent.
+  .mkv copy. The -t means test so it wont really send the stream to
+  YouTube but will also save a local .f4v of what would have been
+  sent.
 
 - `quickcast.sh -i 864x480 -o 240p -S youtube` Just like the previous
   example except not a test this time. Skip (-S) any other popup
@@ -108,16 +118,22 @@ need that.
   local .fv4 file instead. The twitch mode does not normally save a
   local .mkv copy though, as the youtube mode does.
 
-- `quickcast.sh twitch`
+- `quickcast.sh twitch` Will pop up dialogues to query the user for the
+  required information. The `twitch` mode doesn't include the webcam
+  inset as the `twitchcam` mode does.
 
-- `quickcast.sh twitchcam`
+- `quickcast.sh -g FULL -i 320x240 -o 720p -S twitchcam` Stream the
+  full screen to Twitch adding the webcam insert (currently in the
+  lower right, but eventually which corner will be an option). The
+  output will be scaled scaled down to 720p (1280x720) and set to
+  Twitch. Skip (-S) the pop up dialogues.
 
 ## TODO's
 
-- Actually test on Twitch.tv
-
 - Make position of the Twitch cam (currently hard coded into lower
-  left) configurable.
+  right) configurable.
+
+- Have a `-D` debug switch that spits put the command line used.
 
 - Allow for more configuration and us less hard-coding of values in the
   script.
