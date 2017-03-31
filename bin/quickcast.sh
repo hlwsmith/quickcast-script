@@ -402,7 +402,7 @@ do_twitch ()
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
     else
-	echo "      Stream: ${URL}/${KEY}"
+	echo "      Stream: ${URL}/\${KEY}"
     fi
     #echo "       File: ${OUTFILE}"
     echo " --------------------- "
@@ -444,14 +444,14 @@ do_twitchcam ()
     echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
-    echo "     webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
+    echo "     webcam: ${CAM_W}x${CAM_H} (scaled) inset."
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then
 	echo "Saving to test stream file: "
 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
     else
-	echo "      Stream: ${URL}/${KEY}"
+	echo "      Stream: ${URL}/\${KEY}"
     fi
     echo "      BRATE: ${BRATE}"
     echo " --------------------- "
