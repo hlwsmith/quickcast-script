@@ -12,15 +12,13 @@ ffmpeg to stream live content.
 I would use [Kazam](http://launchpad.net/kazam) for screencasts but
 there's no way to adjust the microphone settings. It seems stuck
 on 44.1 khz (oh, and the 90's called and wanted their sample rate
-back!)
-
-Also can stream live to YouTube or Twitch using this.
+back!) Also this can stream live to YouTube or Twitch.
 
 Basically what it does is take a command line like:
 
-`quickcast -g 1792x1008 -o 504 -Q veryslow twitchcam`
+`quickcast -g 1792x1008 -o 504 twitchcam`
 
-To construct and run the actual ffmpeg command:
+Constructing and running the actual ffmpeg command:
 
 `ffmpeg -y -loglevel info -f alsa -ar 48000 -i pulse -f x11grab -video_size 1792x1008 -i :0.0+0,28 -f v4l2 -video_size 176x144 -i /dev/video0 -filter_complex [1:v]scale=896x504,setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out] -map [out] -map 0:a -c:a libmp3lame -ac 1 -ab 48k -c:v libx264 -preset veryslow -crf 23 -maxrate 650k -bufsize 1300k -r:v 10 -force_key_frames expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2)) -pix_fmt yuv420p -g 18 -f flv rtmp://live.twitch.tv/app/live_xxxxxxxx`
 
