@@ -389,7 +389,6 @@ do_screencap ()
 do_twitch ()
 {
     NAME="twitch"
-    #OUTFILE="${NAME}_${DATE}.mkv"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
     echo "  Using stream setup ${NAME}."
@@ -404,24 +403,19 @@ do_twitch ()
     else
 	echo "      Stream: ${URL}/\${KEY}"
     fi
-    #echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
-    # An effort to no go over 2 sec keyframes that Twitch complains about
-    # divide by 1 to make it an integer, setting GOP to VRATE*2 still
-    # resulted in twitch complaining about max key intervals  being
-    # 3 seconds or more!
-    GOP=$(echo "(${VRATE}*1.33)/1" | bc)
+    # An effort to not go over 2 sec keyframes
+    let GOP=VRATE*2-2
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} ${BRATE} -r:v ${VRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 20 ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
-    KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
+    #KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
-    OUTFMT="-f flv"
     if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
 	echo "Saving to test stream file: ${OUTPUT}"
@@ -432,7 +426,7 @@ do_twitch ()
 	-filter:v "${FILTER}" \
 	${ACODEC} ${VCODEC} \
 	-force_key_frames "${KFRAMES}" -pix_fmt yuv420p -g $GOP \
-	${OUTFMT} "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
+	-f flv "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
 }
 
 do_twitchcam ()
@@ -463,11 +457,13 @@ do_twitchcam ()
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 18 ${BRATE} -r:v ${VRATE}"
-    #VCODEC="-c:v libx264 -preset veryslow -qp 0
+    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 20 ${BRATE} -r:v ${VRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
-    FILTER="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out]"
-    OUTFMT="-f flv"
+    # set up overlay filter
+    MAIN="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]"
+    INSET="[2:v]scale=${CAM_W}x${CAM_H},setpts=PTS-STARTPTS[fg]"
+    OVERLAY="[bg][fg]overlay=W-w-6:H-h-18,format=yuv420p[out]"
+    FILTER="${MAIN}; ${INSET}; ${OVERLAY}"
     if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
 	echo "Saving to test stream file: ${OUTPUT}"
@@ -478,7 +474,7 @@ do_twitchcam ()
 	-filter_complex "${FILTER}" -map "[out]" -map 0:a \
 	${ACODEC} ${VCODEC} \
 	-force_key_frames "${KFRAMES}" -pix_fmt yuv420p -g $GOP \
-	${OUTFMT} "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
+	-f flv "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
 }
 
 function query_webcam ()
@@ -1141,6 +1137,11 @@ case ${STREAM_TYPE} in
 	    CAM_W=176
 	    CAM_H=144
 	fi
+	#echo "${OUT_H} and ${GRAB_H}"
+	SCALE=$(echo "1000* ${OUT_H} / ${GRAB_H}" | bc)
+	#echo "SCALE is ${SCALE} CAM_W ${CAM_W} CAM_H ${CAM_H}"
+	CAM_W=$(echo "${CAM_W} * ${SCALE} / 1000" | bc)
+	CAM_H=$(echo "${CAM_H} * ${SCALE} / 1000" | bc)
 	do_twitchcam
 	;;
     *)
