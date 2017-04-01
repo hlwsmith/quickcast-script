@@ -1122,10 +1122,13 @@ case ${STREAM_TYPE} in
 	AB=${THIS}
 	if [ "${OUTSIZE}" ] ; then
 	    set_outsize $OUTSIZE
+	elif [ "${SKIP}" ]; then
+	    echo GOT SKIP
 	else
 	    query_outsize_twitch
 	fi
 	if [ ! "$OUTSIZE" ] ; then
+	    ### TODO make this a config setting
 	    set_outsize 504
 	fi
 	get_grabarea
