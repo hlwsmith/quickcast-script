@@ -69,6 +69,12 @@ the user for the needed information.
           360p for 'youtube', 504 for the 'twitch' and 'twitchcam'
           streams. For 'screencap' and 'camcap' the input sized is
           used.
+      -p <placement>
+          The placement of the Webcam inset for twitchcam mode.  One
+          of: ll, lr, ul, ur (for lower left, lower right, upper left,
+          upper right). This setting is ignore in the other modes. The
+          default is taken from the config file, (initially set too
+          ll for lower left)
       -Q <quality-preset>
           One of ultrafast, superfast, veryfast, faster, fast, medium,
           slow, slower, veryslow. The default depends on the stream
@@ -118,6 +124,38 @@ the user for the needed information.
           via clicking on the desired window.
 "
 echo "$USAGE"
+}
+
+check_placement ()
+{
+    for choice in ll lr ul ur; do
+	if [ "${1}" = ll ]; then
+	    return
+	fi
+    done
+    echo "Placement of inset needs to be one of: ll lr ul ur" >2
+}
+
+set_placement ()
+{
+    case $1 in
+	ll)
+	    PLACEMENT="4:H-h-4"
+	    CORNER="LowerLeft"
+	    ;;
+	lr)
+	    PLACEMENT="W-w-4:H-h-4"
+	    CORNER="LowerRight"
+	    ;;
+	ul)
+	    PLACEMENT="4:4"
+	    CORNER="UpperLeft"
+	    ;;
+	ur)
+	    PLACEMENT="W-w-4:4"
+	    CORNER="UpperRight"
+	    ;;
+    esac
 }
 
 set_this_wh ()
@@ -448,7 +486,7 @@ do_twitchcam ()
     echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
-    echo " webcam-out: ${CAMO_W}x${CAMO_H} ${MATCHSCALE} inset."
+    echo " webcam-out: ${CAMO_W}x${CAMO_H} ${MATCHSCALE} inset ${CORNER}."
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then
@@ -475,7 +513,7 @@ do_twitchcam ()
     then INSET="[2:v]scale=${CAMO_W}x${CAMO_H},setpts=PTS-STARTPTS[fg]"
     else INSET="[2:v]setpts=PTS-STARTPTS[fg]"
     fi
-    OVERLAY="[bg][fg]overlay=W-w-6:H-h-18,format=yuv420p[out]"
+    OVERLAY="[bg][fg]overlay=${PLACEMENT},format=yuv420p[out]"
     FILTER="${MAIN}; ${INSET}; ${OVERLAY}"
     if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
@@ -787,6 +825,9 @@ BANDWIDTH="650"
 
 # default webcam to use, usually this is correct
 WEBCAM=/dev/video0
+# placement of inset cam in twitchcam mode
+# ll (lower left), lr (lower right), up( upper left), ur (upper right)
+PLACEMENT=ll
 
 # Where to save the files, This directory is creatred if it doesn't exist
 SAVEDIR=\${HOME}/quickcasts
@@ -863,7 +904,7 @@ STREAM_DESCS[twitchcam]=" - Same as 'twitch' with cam inset at lower left."
 check_config
 
 # why can't I put this option parsing into a fucntion?
-while getopts ":Vhb:c:C:f:g:i:K:mM:o:Q:r:R:sStU:v:x:y:" opt; do
+while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStU:v:x:y:" opt; do
     case $opt in
 	V)
 	    echo "${PROGNAME} ${VERSION}"
@@ -917,6 +958,9 @@ while getopts ":Vhb:c:C:f:g:i:K:mM:o:Q:r:R:sStU:v:x:y:" opt; do
 	    ;;
 	o)
 	    OUTSIZE=$OPTARG
+	    ;;
+	p)
+	    CORNER=$OPTARG
 	    ;;
         Q)
 	    QUALITY=$OPTARG
@@ -1156,6 +1200,9 @@ case ${STREAM_TYPE} in
 	    CAM_W=176
 	    CAM_H=144
 	fi
+	[ "${CORNER}" ] || CORNER=${PLACEMENT}
+	check_placement ${CORNER} || exit 1
+	set_placement ${CORNER}
 	if [ "${MATCHSCALE}" = scaled ]; then
 	    SCALE=$(echo "1000* ${OUT_H} / ${GRAB_H}" | bc)
 	    CAMO_W=$(echo "${CAM_W} * ${SCALE} / 1000" | bc)
