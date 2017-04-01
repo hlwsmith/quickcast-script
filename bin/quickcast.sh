@@ -44,6 +44,16 @@ the user for the needed information.
           The streaming key to use for the YouTube or Twitch stream
           (the option is ignored otherwise.) By default the proper key
           is selected from ${CONFIGFILE}
+      -m 
+          Match scale. This option will scale the TwitchCam inset
+          video down the same amount as the screengrab part is being
+          scaled (if any). For example if you're screencasting
+          1920x1080 down to 720p (1280x720) and have the webcam inset
+          set at 320x240 then with this option it will also scale down
+          the same amount (by .667 to 213x160 in this example) and
+          without this option the inset will remain at 320x240, perhaps
+          taking up more of the video real-estate then you expected.
+          This option has no effect in the other modes.
       -M <max-bitrate>
           The max bitrate of the video encoder in kbps, the default depends
           on the stream type. (around 600 for YouTube and Twitch streams)
@@ -438,7 +448,7 @@ do_twitchcam ()
     echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
-    echo "     webcam: ${CAM_W}x${CAM_H} (scaled) inset."
+    echo " webcam-out: ${CAMO_W}x${CAMO_H} ${MATCHSCALE} inset."
     echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then
@@ -457,11 +467,14 @@ do_twitchcam ()
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 20 ${BRATE} -r:v ${VRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 23 ${BRATE} -r:v ${VRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     # set up overlay filter
     MAIN="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]"
-    INSET="[2:v]scale=${CAM_W}x${CAM_H},setpts=PTS-STARTPTS[fg]"
+    if [ "${MATCHSCALE}" = scaled ]
+    then INSET="[2:v]scale=${CAMO_W}x${CAMO_H},setpts=PTS-STARTPTS[fg]"
+    else INSET="[2:v]setpts=PTS-STARTPTS[fg]"
+    fi
     OVERLAY="[bg][fg]overlay=W-w-6:H-h-18,format=yuv420p[out]"
     FILTER="${MAIN}; ${INSET}; ${OVERLAY}"
     if [ "$TEST" ] ; then
@@ -850,7 +863,7 @@ STREAM_DESCS[twitchcam]=" - Same as 'twitch' with cam inset at lower left."
 check_config
 
 # why can't I put this option parsing into a fucntion?
-while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
+while getopts ":Vhb:c:C:f:g:i:K:mM:o:Q:r:R:sStU:v:x:y:" opt; do
     case $opt in
 	V)
 	    echo "${PROGNAME} ${VERSION}"
@@ -895,6 +908,9 @@ while getopts ":Vhb:c:C:f:g:i:K:M:o:Q:r:R:sStU:v:x:y:" opt; do
 	    set_this_wh $OPTARG
 	    CAM_W=$THIS_W
 	    CAM_H=$THIS_H
+	    ;;
+	m)
+	    MATCHSCALE=scaled
 	    ;;
 	M)
 	    MAXRATE=$OPTARG
@@ -1137,11 +1153,14 @@ case ${STREAM_TYPE} in
 	    CAM_W=176
 	    CAM_H=144
 	fi
-	#echo "${OUT_H} and ${GRAB_H}"
-	SCALE=$(echo "1000* ${OUT_H} / ${GRAB_H}" | bc)
-	#echo "SCALE is ${SCALE} CAM_W ${CAM_W} CAM_H ${CAM_H}"
-	CAM_W=$(echo "${CAM_W} * ${SCALE} / 1000" | bc)
-	CAM_H=$(echo "${CAM_H} * ${SCALE} / 1000" | bc)
+	if [ "${MATCHSCALE}" = scaled ]; then
+	    SCALE=$(echo "1000* ${OUT_H} / ${GRAB_H}" | bc)
+	    CAMO_W=$(echo "${CAM_W} * ${SCALE} / 1000" | bc)
+	    CAMO_H=$(echo "${CAM_H} * ${SCALE} / 1000" | bc)
+	else
+	    CAMO_W=CAM_W
+	    CAMO_H=CAM_H
+	fi
 	do_twitchcam
 	;;
     *)
