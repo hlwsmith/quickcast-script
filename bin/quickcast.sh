@@ -129,11 +129,12 @@ echo "$USAGE"
 check_placement ()
 {
     for choice in ll lr ul ur; do
-	if [ "${1}" = ll ]; then
+	if [ "${1}" = "${choice}" ]; then
 	    return
 	fi
     done
-    echo "Placement of inset needs to be one of: ll lr ul ur" >2
+    echo "Placement of inset needs to be one of: ll lr ul ur" >&2
+    return 1
 }
 
 set_placement ()
