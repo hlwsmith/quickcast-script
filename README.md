@@ -16,12 +16,11 @@ back!) Also this can stream live to YouTube or Twitch.
 
 Basically what it does is take a command line like:
 
-`quickcast -g 1792x1008 -o 504 twitchcam`
+`quickcast -g FULL -i 320x240 -m -p lr -S twitchcam`
 
-Constructing and running the actual ffmpeg command:
+Constructing and running the actual ffmpeg command (something like):
 
-`ffmpeg -y -loglevel info -f alsa -ar 48000 -i pulse -f x11grab -video_size 1792x1008 -i :0.0+0,28 -f v4l2 -video_size 176x144 -i /dev/video0 -filter_complex [1:v]scale=896x504,setpts=PTS-STARTPTS[bg]; [2:v]setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=0:H-h-18,format=yuv420p[out] -map [out] -map 0:a -c:a libmp3lame -ac 1 -ab 48k -c:v libx264 -preset veryslow -crf 23 -maxrate 650k -bufsize 1300k -r:v 10 -force_key_frames expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2)) -pix_fmt yuv420p -g 18 -f flv rtmp://live.twitch.tv/app/live_xxxxxxxx`
-
+`ffmpeg -y -loglevel info -f alsa -ar 48000 -i pulse -f x11grab -video_size 1920x1080 -i :0.0+0,0 -f v4l2 -video_size 320x240 -i /dev/video0 -filter_complex "[1:v]scale=896x504,setpts=PTS-STARTPTS[bg]; [2:v]scale=149x111,setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=W-w-4:H-h-4,format=yuv420p[out]" -map [out] -map 0:a -c:a libmp3lame -ac 1 -ab 48k -c:v libx264 -preset veryfast -crf 23 -maxrate 800k -bufsize 1600k -r:v 10 -force_key_frames "expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))" -pix_fmt yuv420p -g 18 -f flv rtmp://live.twitch.tv/app/live_xxxxxxx`
 
 ## Requirements
 
@@ -110,31 +109,28 @@ need that.
 
   Twitch mode is like youtube only sends a screencast instead of the
   webcam (and to twitch.tv instead of YouTube.com, obviously).  There
-  is also a `twitchcam` mode which insets the output of your webcam in
-  the lower left. I've not tested twitch mode for real in awhile. Like
-  youtube there is also a -t option (test) to save the output to a
-  local .fv4 file instead. The twitch mode does not normally save a
-  local .mkv copy though, as the youtube mode does.
+  is also a `twitchcam` mode which insets the output of your webcam
+  into the corner of your choice. Like youtube there is also a -t
+  option (test) to save the output to a local .fv4 file
+  instead. However the twitch mode does not normally save a local .mkv
+  copy though, as the youtube mode does. (This is becuase I'm usually
+  already working my CPU hard enough playing a game and streaming)
 
 - `quickcast.sh twitch` Will pop up dialogues to query the user for the
   required information. The `twitch` mode doesn't include the webcam
   inset as the `twitchcam` mode does.
 
 - `quickcast.sh -g FULL -i 320x240 -o 720p -S twitchcam` Stream the
-  full screen to Twitch adding the webcam insert (currently in the
-  lower right, but eventually which corner will be an option). The
-  output will be scaled down to 720p (1280x720) and sent to
-  Twitch. Skip (-S) the pop up dialogues.
+  full screen to Twitch adding the webcam insert into the corner
+  configured into the coinfig file. The output will be scaled down to
+  720p (1280x720) and sent to Twitch. Skip (-S) the pop up dialogues.
 
 ## TODO's
-
-- Make position of the Twitch cam (currently hard coded into lower
-  right) configurable.
 
 - Have a `-D` debug switch that spits put the command line used.
 
 - Allow for more configuration and us less hard-coding of values in the
-  script.
+  script. (Ongoing)
 
 - Make just webcam stream-able to Twitch since they allow all kinds of
   content now, not only gamecasting.
