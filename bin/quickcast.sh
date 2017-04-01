@@ -1161,8 +1161,8 @@ case ${STREAM_TYPE} in
 	    CAMO_W=$(echo "${CAM_W} * ${SCALE} / 1000" | bc)
 	    CAMO_H=$(echo "${CAM_H} * ${SCALE} / 1000" | bc)
 	else
-	    CAMO_W=CAM_W
-	    CAMO_H=CAM_H
+	    CAMO_W=${CAM_W}
+	    CAMO_H=${CAM_H}
 	fi
 	do_twitchcam
 	;;
