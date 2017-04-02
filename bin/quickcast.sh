@@ -164,14 +164,6 @@ set_this_wh ()
     THIS_H=$(echo $WxH | awk '{print $2}')
 }
 
-set_cam_dimensions ()
-# not currently being used
-{
-    set_this_wh $1
-    v4l2-ctl --set-fmt-video=width=${THIS_W},height=${THIS_H},pixelformat=YUYV
-}
-
-
 set_this ()
 # sets THIS to the REQUESTED value or the DEFAULT
 {
