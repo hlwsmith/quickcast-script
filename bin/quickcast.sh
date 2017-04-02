@@ -561,10 +561,10 @@ query_outsize_youtube() {
     if OUTSIZE=$($dialog --title "Output Video Dimensions" \
 	--nocancel --radiolist \
 	"Choose dimensions for the streaming video:" 12 60 4 \
-	"240p" "432x240 -- fps 24" OFF \
-	"360p" "640x360 -- fps 24" ON \
-	"480p" "864x480 -- fps 24" OFF \
-	"720p" "1280x720 -- fps 10" OFF 3>&1 1>&2 2>&3);
+	"240p" "432x240" OFF \
+	"360p" "640x360" ON \
+	"480p" "864x480" OFF \
+	"720p" "1280x720" OFF 3>&1 1>&2 2>&3);
     then
 	set_outsize $OUTSIZE
     fi
@@ -575,14 +575,14 @@ query_outsize_twitch() {
 #   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
     if OUTSIZE=$($dialog --title "Video Encoder Settings" --radiolist \
 	"Choose dimensions for the streaming video:" 20 60 8 \
-	"240p" "432x240 -- fps 30" OFF \
-	"360p" "640x360 -- fps 20" OFF \
-	"450" "800x450 -- fps 15" ON \
-	"480p" "864x480 -- fps 10" OFF \
-	"504" "896x504 -- fps 10" OFF \
-	"540" "960x540 -- fps 10" OFF \
-	"576" "1024x576 -- fps 10" OFF \
-	"720p" "1280x720 -- fps 10" OFF \
+	"240p" "432x240" OFF \
+	"360p" "640x360" OFF \
+	"450" "800x450" ON \
+	"480p" "864x480" OFF \
+	"504" "896x504" OFF \
+	"540" "960x540" OFF \
+	"576" "1024x576" OFF \
+	"720p" "1280x720" OFF \
 	3>&1 1>&2 2>&3);
     then
 	set_outsize $OUTSIZE
@@ -594,17 +594,17 @@ query_outsize_screen() {
 #   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
     if OUTSIZE=$($dialog --title "Video Encoder Settings" --radiolist \
 	"Choose dimensions for the output video:" 18 60 11 \
-	"240p" "432x240 -- fps 30" OFF \
-	"360p" "640x360 -- fps 30" OFF \
-	"450" "800x450 -- fps 24" OFF \
-	"480p" "864x480 -- fps 20" OFF \
-	"504" "896x504 -- fps 20" OFF \
-	"540" "960x540 -- fps 20" OFF \
-	"576" "1024x576 -- fps 15" OFF \
-	"720p" "1280x720 -- fps 15" ON \
-	"900" "1600x900 -- fps 10" OFF \
-	"1008" "1792x1008 -- fps 10" OFF \
-	"1080p" "1920x1080 -- fps 15" OFF \
+	"240p" "432x240" OFF \
+	"360p" "640x360" OFF \
+	"450" "800x450" OFF \
+	"480p" "864x480" OFF \
+	"504" "896x504" OFF \
+	"540" "960x540" OFF \
+	"576" "1024x576" OFF \
+	"720p" "1280x720" ON \
+	"900" "1600x900" OFF \
+	"1008" "1792x1008" OFF \
+	"1080p" "1920x1080" OFF \
 	3>&1 1>&2 2>&3);
     then
 	set_outsize $OUTSIZE
@@ -655,7 +655,8 @@ query_audio() {
 }
 
 query_video() {
-    #quality-preset #ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+    #quality-presets:
+    #ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
     #vrate #
     #tune-setting # film, animation or zerolatency
     #CBR # 'constant bit rate' setting for the video in kbps.
@@ -843,8 +844,11 @@ EOF
 }
 
 check_config() {
-    if [ ! -s ${CONFIGFILE} ]
-    then make_config
+    if [ ! -s ${CONFIGFILE} ]; then
+	make_config
+	echo "Please set a SAVEDIR in your config file:\n ${CONFIGFILE}"
+	echo "Then try again."
+	exit
     fi
     source "${CONFIGFILE}"
     if [ -a ${SAVEDIR} ]; then
@@ -852,10 +856,6 @@ check_config() {
 	    echo "Please set a valid SAVEDIR in your config file:\n ${CONFIGFILE}"
 	    exit 1
 	fi
-    else
-	# SAVEDIR doesn't exist so make it
-	echo "Creating save directory ${SAVEDIR}"
-	mkdir ${SAVEDIR}
     fi
 }
 
