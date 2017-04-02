@@ -850,16 +850,16 @@ EOF
 check_config() {
     if [ ! -s ${CONFIGFILE} ]; then
 	make_config
-	echo -e "Please set a SAVEDIR in your config file:\n ${CONFIGFILE}"
-	echo "Then try again."
-	exit
     fi
     source "${CONFIGFILE}"
-    if [ -a ${SAVEDIR} ]; then
-	if [ ! -d ${SAVEDIR} ]; then
-	    echo "Please set a valid SAVEDIR in your config file:\n ${CONFIGFILE}"
-	    exit 1
-	fi
+    if [ ! "${SAVEDIR}" ]; then
+	echo -e "Please set a SAVEDIR in your config file:\n ${CONFIGFILE}"
+	echo "Then try again."
+	exit 1
+    fi
+    if [ ! -d ${SAVEDIR} ]; then
+	echo "Please set a valid SAVEDIR in your config file:\n ${CONFIGFILE}"
+	exit 1
     fi
 }
 
