@@ -1222,14 +1222,3 @@ case ${STREAM_TYPE} in
 	exit 1
 	;;
 esac
-
-##########
-    # echo "        Cam: ${CAM_W}x${CAM_H} webcam "
-    # echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps "
-    # echo "      Audio: ${AC} channel(s) at ${AB}kbps"
-    # echo "       File: ${OUTFILE}"
-    # 	echo "     ${SAVEDIR}/test_${NAME}.f4v"
-    # 	echo "      Stream: ${URL}/${KEY}"
-    # echo " Local File: ${FILE}"
-    # echo "      Screen: ${GRABAREA} at ${GRABXY} "
-    # echo "      webcam: ${CAM_W}x${CAM_H} inset at lowerleft."
