@@ -126,20 +126,18 @@ the user for the needed information.
 echo "$USAGE"
 }
 
-check_placement ()
-{
-    for choice in ll lr ul ur; do
-	if [ "${1}" = "${choice}" ]; then
-	    return
-	fi
-    done
-    echo "Placement of inset needs to be one of: ll lr ul ur" >&2
-    return 1
-}
-
 set_placement ()
 {
-    case $1 in
+    while true; do
+	for choice in ll lr ul ur; do
+	    if [ "${1}" = "${choice}" ]; then
+		break 2
+	    fi
+	done
+	echo "Placement of inset needs to be one of: ll lr ul ur" >&2
+	return 1
+    done
+    case ${1} in
 	ll)
 	    PLACEMENT="4:H-h-4"
 	    CORNER="LowerLeft"
@@ -1202,8 +1200,7 @@ case ${STREAM_TYPE} in
 	    CAM_H=144
 	fi
 	[ "${CORNER}" ] || CORNER=${PLACEMENT}
-	check_placement ${CORNER} || exit 1
-	set_placement ${CORNER}
+	set_placement ${CORNER} || exit 1
 	if [ "${MATCHSCALE}" = scaled ]; then
 	    SCALE=$(echo "1000* ${OUT_H} / ${GRAB_H}" | bc)
 	    CAMO_W=$(echo "${CAM_W} * ${SCALE} / 1000" | bc)
