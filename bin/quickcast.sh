@@ -1211,3 +1211,4 @@ case ${STREAM_TYPE} in
 	exit 1
 	;;
 esac
+exit
