@@ -87,25 +87,21 @@ the user for the needed information.
           The video frame rate. If omitted defaults depends on the output
           video size configuration and mode.
       -R <audio-sample-rate>
-          in hz
+          in hz, usually either 44100 or 48000.
       -s
-          Scales the screen grab (or webcam) width to the output height (-o)
-          maintaining the same ration as the input. Without this option a
-          standard (~16x9-ish) width will be used, potentially stretching
-          or shrinking the width dimension if the original (cam or grab area)
+          Scales the output width to the output height, maintaining
+          the same ration from the input. Without this option a
+          standard (~16x9-ish) width will be used, potentially
+          stretching or shrinking the width dimension if the original
           was not also in 16x9.
       -S
           Skip the option dialogs, taking the defaults without querying
-          for conformation.
+          for the information.
       -t
           Test run, does not stream, instead saves what would have
           been streamed to: test_<stream_name>.f4v. This only effects
           the modes that stream to the internet (twitch, twitchcam
           and youtube). This option is ignored for other stream types.
-      -T <tune-setting> NOT IMPLEMENTED
-          x264 'tune' setting to use. Default depends on the stream type.
-          film, animation or zerolatency are the obvious choices,
-          however best to omit unless you are sure.
       -U <rtmp://example.com/path>
           Overrides the URL for streaming to YouTube or Twitch, otherwise
           the applicable one found in ${CONFIGFILE} is used.
@@ -816,7 +812,7 @@ BANDWIDTH="650"
 
 # default webcam to use, usually this is correct
 WEBCAM=/dev/video0
-# placement of inset cam in twitchcam mode
+# default placement of inset cam in twitchcam mode, one of: ll lr ul ur
 # ll (lower left), lr (lower right), up( upper left), ur (upper right)
 PLACEMENT=ll
 
@@ -835,9 +831,10 @@ AENCODE=libmp3lame
 
 # If you have v4l2-ctl (found in the v4l-utils package in Debian) you
 # run this command to figure out the sizes your webcam supports.
-# v4l2-ctl --list-formats-ext | grep Size: | awk '{print \$3}' | sort -n| uniq
-# Supported input video sizes seporated by space:
-CAMSIZES="176x144 352x288 432x240 640x360 640x480 800x600 864x480 1024x576 1280x720"
+#  v4l2-ctl --list-formats-ext | grep Size: | awk '{print \$3}' | sort -n| uniq
+# List which of those you might actually want to use here seporated by space:
+# (don't forget the small sizes for the twitchcam inset)
+CAMSIZES="160x120 176x144 320x240 352x288 432x240 640x360 640x480 800x600 864x480 1024x576 1280x720"
 
 # Default input video size to use, obviously one from the previous list
 DEFAULT_CAMSIZE=640x480
@@ -864,7 +861,7 @@ function check_config() {
 
 function check_dialog() {
     # check whether whiptail or dialog is installed
-    # (choosing the first command found)
+    # (choosing the whiptail if both are found)
     if [ ! "$SKIP" ]; then
 	read dialog <<< "$(basename $(which whiptail dialog) 2> /dev/null)"
 	echo "Got $dialog for the dialog backend"
@@ -877,6 +874,8 @@ function check_dialog() {
 }
 
 #### main ####
+
+## init stuff
 
 # get the size of the root window
 ROOTSCRN=$(xwininfo -root | awk '/-geo/{print $2}' | sed 's|\([0-9]*\)x\([0-9]*\).*|\1 \2|')
@@ -1016,6 +1015,8 @@ if [[ ! ($1 || $SKIP) ]]; then
 else
     STREAM_TYPE=${1}
 fi
+
+## the MAIN case ##
 
 case ${STREAM_TYPE} in
 # camcap youtube screencap twitch twitchcam
