@@ -556,7 +556,7 @@ query_webcam ()
     fi
 }
 
-query_outsize() {
+query_outsize_youtube() {
 # For use with YouTube 240p 360p 480p 720p
     if OUTSIZE=$($dialog --title "Output Video Dimensions" \
 	--nocancel --radiolist \
@@ -1112,7 +1112,7 @@ case ${STREAM_TYPE} in
 	if [ "$OUTSIZE" ] ; then
 	    set_outsize $OUTSIZE
 	else
-	    query_outsize
+	    query_outsize_youtube
 	fi
 	if [ ! "${URL}" ] ; then
 	    URL="${YOUTUBE_URL}"
