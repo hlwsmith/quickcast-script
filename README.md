@@ -12,20 +12,24 @@ ffmpeg to stream live content.
 I would use [Kazam](http://launchpad.net/kazam) for screencasts but
 there's no way to adjust the microphone settings. It seems stuck
 on 44.1 khz (oh, and the 90's called and wanted their sample rate
-back!) Also this can stream live to YouTube or Twitch.
+back!) Also this can stream live to YouTube or Twitch. Of course what
+you should really be checking out for that is Open Broadcaster
+Software [OBS](https://obsproject.com/).
 
-Basically what it does is take a command line like:
+Basically what this script does is take a command line like:
 
-`quickcast -g FULL -i 320x240 -m -p lr -S twitchcam`
+`quickcast -g full -i 320x240 -m -p lr -S twitchcam`
 
-Constructing and running the actual ffmpeg command (something like):
+And constructs and runs the actual ffmpeg command (something like):
 
 `ffmpeg -y -loglevel info -f alsa -ar 48000 -i pulse -f x11grab -video_size 1920x1080 -i :0.0+0,0 -f v4l2 -video_size 320x240 -i /dev/video0 -filter_complex "[1:v]scale=896x504,setpts=PTS-STARTPTS[bg]; [2:v]scale=149x111,setpts=PTS-STARTPTS[fg]; [bg][fg]overlay=W-w-4:H-h-4,format=yuv420p[out]" -map [out] -map 0:a -c:a libmp3lame -ac 1 -ab 48k -c:v libx264 -preset veryfast -crf 23 -maxrate 800k -bufsize 1600k -r:v 10 -force_key_frames "expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))" -pix_fmt yuv420p -g 18 -f flv rtmp://live.twitch.tv/app/live_xxxxxxx`
 
 ## Requirements
 
 Being just a shell script this calls other command line programs to do
-all the real work, so you'll need to make sure they are installed.
+all the real work, so you'll need to make sure they are
+installed. Besides standard command line tools like `awk` and `sed`
+you'll need:
 
 - `ffmpeg` I usually build my own using
   [this Compilation Guide](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu).
@@ -57,6 +61,8 @@ command invocation along with the -S flag (to Skip the final advanced
 option screen). Also it will still work all from the command line with
 neither `whiptail` or `dialog` installed.
 
+The twitchcam mode places a small webcam inset in the corner (of your
+choosing) or your screen.
 
 ## Examples:
 
@@ -78,7 +84,7 @@ need that.
 
 ### Screen Capturing
 
-- `quickcast.sh -g FULL screencap` Does a screen capture of the full
+- `quickcast.sh -g full screencap` Does a screen capture of the full
   screen. Will pop up dialog asking for other parameters, such as the
   output size. More of the defaults should be in the config file, many
   of them are hard coded at the moment.. but hey, it's a shell script
@@ -120,7 +126,7 @@ need that.
   required information. The `twitch` mode doesn't include the webcam
   inset as the `twitchcam` mode does.
 
-- `quickcast.sh -g FULL -i 320x240 -o 720p -S twitchcam` Stream the
+- `quickcast.sh -g full -i 320x240 -o 720p -S twitchcam` Stream the
   full screen to Twitch adding the webcam insert into the corner
   configured into the coinfig file. The output will be scaled down to
   720p (1280x720) and sent to Twitch. Skip (-S) the pop up dialogues.
@@ -137,7 +143,7 @@ need that.
 
 - And make screencasting live stream-able to YouTube.com. 
 
-- Finish making this TODO list, probably will be long!
+- Finish making this TODO list!
 
 ## The future
 
