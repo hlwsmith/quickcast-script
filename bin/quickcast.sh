@@ -160,6 +160,7 @@ set_this_wh ()
     WxH=$(echo $1 | sed 's/x/ /')
     THIS_W=$(echo $WxH | awk '{print $1}')
     THIS_H=$(echo $WxH | awk '{print $2}')
+    [ "${THIS_W}" ] && [ "${THIS_H}" ] || return 1
 }
 
 set_this ()
@@ -819,8 +820,9 @@ WEBCAM=/dev/video0
 # ll (lower left), lr (lower right), up( upper left), ur (upper right)
 PLACEMENT=ll
 
-# Where to save the files, This directory is creatred if it doesn't exist
-SAVEDIR=\${HOME}/quickcasts
+# Please set this!
+# Where to save the files.
+#SAVEDIR=\${HOME}/quickcasts
 
 # default audio sample rate
 SAMPLES=48000
@@ -848,7 +850,7 @@ EOF
 check_config() {
     if [ ! -s ${CONFIGFILE} ]; then
 	make_config
-	echo "Please set a SAVEDIR in your config file:\n ${CONFIGFILE}"
+	echo -e "Please set a SAVEDIR in your config file:\n ${CONFIGFILE}"
 	echo "Then try again."
 	exit
     fi
@@ -930,7 +932,10 @@ while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStU:v:x:y:" opt; do
 	    else
 		GRABSIZE=$OPTARG
 	    fi
-	    set_this_wh $GRABSIZE
+	    if ! set_this_wh $GRABSIZE; then
+	       echo "Grab size takes the form DDDxDDD";
+	       exit 1
+	    fi
 	    GRAB_W=$THIS_W
 	    GRAB_H=$THIS_H
 	    ;;
