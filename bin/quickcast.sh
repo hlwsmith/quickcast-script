@@ -5,7 +5,7 @@ VERSION="0.7.1"
 CONFIGFILE="${HOME}/.quickcast"
 DATE=`date +%Y-%m-%d_%H%M%S`
 
-function show_usage() {
+show_usage() {
 USAGE="
 USAGE: ${PROGNAME} [options] <stream_type>
 
@@ -515,7 +515,7 @@ do_twitchcam ()
 	-f flv "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
 }
 
-function query_webcam ()
+query_webcam ()
 # CAMSIZES and DEFAULT_CAMSIZE are set the the config file
 {
     MSG=""
@@ -556,7 +556,7 @@ function query_webcam ()
     fi
 }
 
-function query_outsize() {
+query_outsize() {
 # For use with YouTube 240p 360p 480p 720p
     if OUTSIZE=$($dialog --title "Output Video Dimensions" \
 	--nocancel --radiolist \
@@ -570,7 +570,7 @@ function query_outsize() {
     fi
 }
 
-function query_outsize_twitch() {
+query_outsize_twitch() {
 # For use with twitch.tv
 #   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
     if OUTSIZE=$($dialog --title "Video Encoder Settings" --radiolist \
@@ -589,7 +589,7 @@ function query_outsize_twitch() {
     fi
 }
 
-function query_outsize_screen() {
+query_outsize_screen() {
 # For use with screen grabs
 #   240p 360p 450 480p 504 540 576 720p 900 1008 and 1080p
     if OUTSIZE=$($dialog --title "Video Encoder Settings" --radiolist \
@@ -611,7 +611,7 @@ function query_outsize_screen() {
     fi
 }
 
-function query_audio() {
+query_audio() {
     if [ "$AC" -eq 1 ] ; then
 	STAT1=ON
 	STAT2=OFF
@@ -654,7 +654,7 @@ function query_audio() {
     AB=$CHOICE
 }
 
-function query_video() {
+query_video() {
     #quality-preset #ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
     #vrate #
     #tune-setting # film, animation or zerolatency
@@ -713,7 +713,7 @@ function query_video() {
     QUALITY=$CHOICE
 }
 
-function query_stream() {
+query_stream() {
     #max-bitrate #  600 for YouTube and Twitch
     #streaming-key #
     #stream_url # rtmp://example.com/path
@@ -749,7 +749,7 @@ function query_stream() {
     fi
 }
 
-function query_options_local() {
+query_options_local() {
     if OPTIONS=$($dialog --title "Options" \
 	--nocancel --checklist \
 	"Choose Advanced Options to Configure:" 12 60 3 \
@@ -763,7 +763,7 @@ function query_options_local() {
     fi
 }
 
-function query_options_stream() {
+query_options_stream() {
     if OPTIONS=$($dialog --title "Options" \
 	--nocancel --checklist \
 	"Choose Advanced Options to Configure:" 12 60 4 \
@@ -778,7 +778,7 @@ function query_options_stream() {
     fi
 }
 
-function make_config() {
+make_config() {
     echo "Creating config file in ${CONFIGFILE}"
 cat > ${CONFIGFILE} <<EOF
 # bash source file
@@ -842,7 +842,7 @@ DEFAULT_CAMSIZE=640x480
 EOF
 }
 
-function check_config() {
+check_config() {
     if [ ! -s ${CONFIGFILE} ]
     then make_config
     fi
@@ -859,7 +859,7 @@ function check_config() {
     fi
 }
 
-function check_dialog() {
+check_dialog() {
     # check whether whiptail or dialog is installed
     # (choosing the whiptail if both are found)
     if [ ! "$SKIP" ]; then
