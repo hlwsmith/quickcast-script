@@ -31,10 +31,12 @@ the user for the needed information.
           really want I think, even if they don't want to admit it.
           This overides the -M setting.
       -g <screen-capture-dimensions>
-          Sets the screen grab capture dimensions of the form WIDTHxHEIGHT
-          If omitted it is selected interactively via clicking on the
-          desired window for Twitch streams or for Screen captures, and
-          no screen is grabbed for everythihg else.
+          Sets the screen grab capture dimensions of the form
+          WIDTHxHEIGHT If omitted it is selected interactively via
+          clicking on the desired window for Twitch streams or for
+          Screen captures, and no screen is grabbed for everythihg
+          else. Use the keyword 'full' to grab the whole screen (or
+          just click on the desktop when asked to select a window).
       -i <input-video-dimensions>
           Size of the input video from the webcam, one of:
             ${CAMSIZES}
@@ -920,7 +922,7 @@ while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStU:v:x:y:" opt; do
 	    CBR=$OPTARG
 	    ;;
 	g)
-	    if [ "$OPTARG" = "FULL" ]; then
+	    if [ "$OPTARG" = "full" ]; then
 		GRABSIZE=${ROOTW}x${ROOTH}
 		GRAB_X=0
 		GRAB_Y=0
