@@ -133,6 +133,9 @@ need that.
 
 ## TODO's
 
+- Configure saner, more typical, defaults. (Not everyone has a crappy
+  computer and lousy internet connection!)
+
 - Have a `-D` debug switch that spits put the command line used.
 
 - Allow for more configuration and us less hard-coding of values in the
