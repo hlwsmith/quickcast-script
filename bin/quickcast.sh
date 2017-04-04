@@ -23,20 +23,16 @@ the user for the needed information.
           The number of audio channels 1 (mono) or 2 (stereo.)
            The default is 1 for Twitch streams and 2 for everthing else.
       -C <CBR>
-          The 'constant bit rate' setting for the video in kbps. Note that
-          this is not true CBR, the encoder will attempt to gravitate toward
-          this setting though. This only makes sense for Twitch.tv streams
-          since they seem to insist on this non-sense. If omitted then mode
-          is not used, just the maxrate setting, (See -M) which is what they
-          really want I think, even if they don't want to admit it.
-          This overides the -M setting.
+          The 'constant bit rate' setting for the video in kbps. Note
+          that this is not true CBR, the encoder will attempt to
+          gravitate toward this setting. Normally one just needs to
+          set the maxrate setting, (See -M). This setting overides the
+          -M setting.
       -g <screen-capture-dimensions>
           Sets the screen grab capture dimensions of the form
           WIDTHxHEIGHT If omitted it is selected interactively via
-          clicking on the desired window for Twitch streams or for
-          Screen captures, and no screen is grabbed for everythihg
-          else. Use the keyword 'full' to grab the whole screen (or
-          just click on the desktop when asked to select a window).
+          clicking on the desired window. Use the keyword 'full' to
+          grab the whole screen (or just click on the desktop).
       -i <input-video-dimensions>
           Size of the input video from the webcam, one of:
             ${CAMSIZES}
@@ -45,7 +41,8 @@ the user for the needed information.
       -K <streaming-key>
           The streaming key to use for the YouTube or Twitch stream
           (the option is ignored otherwise.) By default the proper key
-          is selected from ${CONFIGFILE}
+          is selected from the confog file ${CONFIGFILE} or the
+          environment setting.
       -m 
           Match scale. This option will scale the TwitchCam inset
           video down the same amount as the screengrab part is being
