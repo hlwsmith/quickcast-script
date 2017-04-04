@@ -449,7 +449,7 @@ do_twitch ()
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
     VCODEC="-c:v libx264 -preset ${QUALITY} -crf 20 ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
-    #KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
+    KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
