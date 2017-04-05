@@ -3,7 +3,7 @@
 PROGNAME="quickcast.sh"
 VERSION="0.7.2"
 CONFIGFILE="${HOME}/.quickcast"
-DATE=`date +%Y-%m-%d_%H%M%S`
+DATE=$(date +%Y-%m-%d_%H%M%S)
 
 show_usage() {
 USAGE="
@@ -154,9 +154,9 @@ set_placement ()
 
 set_this_wh ()
 {
-    WxH=$(echo $1 | sed 's/x/ /')
-    THIS_W=$(echo $WxH | awk '{print $1}')
-    THIS_H=$(echo $WxH | awk '{print $2}')
+    WxH=${1//x/ }
+    THIS_W=$(echo "$WxH" | awk '{print $1}')
+    THIS_H=$(echo "$WxH" | awk '{print $2}')
     [ "${THIS_W}" ] && [ "${THIS_H}" ] || return 1
 }
 
@@ -165,7 +165,7 @@ set_this ()
 {
     DEFAULT=${1}
     REQUESTED=${2}
-    if [ $REQUESTED ] ; then
+    if [ "$REQUESTED" ] ; then
 	THIS=${REQUESTED}
     else
 	THIS=${DEFAULT}
@@ -243,7 +243,7 @@ set_scale ()
     NEW_H=$1
     OLD_W=$2
     OLD_H=$3
-    if [ "${NEW_H}" -gt "${OLD_H}" ] ; then
+    if [ ${NEW_H} -gt ${OLD_H} ] ; then
 	echo "Scaled height (${NEW_H}) must not be larger then "
 	echo "the original (${OLD_H})" >&2
 	exit 1
@@ -255,12 +255,12 @@ get_windowinfo ()
 {
     THIS_W=$1
     THIS_H=$2
-    if [ $3 ]; then
+    if [ "$3" ]; then
 	THIS_X=$3
     else
 	THIS_X="0"
     fi
-    if [ $4 ];then
+    if [ "$4" ];then
 	THIS_Y=$4
     else
 	THIS_Y="0"
@@ -845,7 +845,7 @@ EOF
 }
 
 check_config() {
-    if [ ! -s ${CONFIGFILE} ]; then
+    if [ ! -s "${CONFIGFILE}" ]; then
 	make_config
     fi
     source "${CONFIGFILE}"
@@ -854,8 +854,8 @@ check_config() {
 	echo "Then try again."
 	exit 1
     fi
-    if [ ! -d ${SAVEDIR} ]; then
-	echo "Please set a valid SAVEDIR in your config file:\n ${CONFIGFILE}"
+    if [ ! -d "${SAVEDIR}" ]; then
+	echo -e "Please set a valid SAVEDIR in your config file:\n ${CONFIGFILE}"
 	exit 1
     fi
 }
