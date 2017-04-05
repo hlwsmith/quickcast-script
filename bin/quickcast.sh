@@ -447,7 +447,7 @@ do_twitch ()
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 20 ${BRATE} -r:v ${VRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} -crf 20 ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
@@ -895,7 +895,7 @@ STREAM_DESCS[twitchcam]=" - Same as 'twitch' with cam inset at lower left."
 check_config
 
 # why can't I put this option parsing into a fucntion?
-while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStU:v:x:y:" opt; do
+while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStT:U:v:x:y:" opt; do
     case $opt in
 	V)
 	    echo "${PROGNAME} ${VERSION}"
@@ -976,8 +976,8 @@ while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStU:v:x:y:" opt; do
 	    echo "Running in test mode"
 	    ;;
 	T)
-	    # not in use
-	    TUNE=$OPTARG
+	    # testing with twitch
+	    TUNE="-tune $OPTARG"
 	    ;;
 	U)
 	    URL=$OPTARG
