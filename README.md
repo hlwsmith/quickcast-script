@@ -10,11 +10,11 @@ ffmpeg to stream live content.
 ## Why This
 
 I would use [Kazam](http://launchpad.net/kazam) for screencasts but
-there's no way to adjust the microphone settings. It seems stuck
-on 44.1 khz (oh, and the 90's called and wanted their sample rate
-back!) Also this can stream live to YouTube or Twitch. Of course what
-you should really be checking out for that is Open Broadcaster
-Software [OBS](https://obsproject.com/).
+there's no way to adjust the microphone settings. It seems stuck on
+44.1 khz (oh, and the 90's called and wanted their sample rate back!)
+Also this can stream live to YouTube or Twitch. Of course what you
+should really be checking out for that is
+[obs-studio](https://github.com/jp9000/obs-studio).
 
 Basically what this script does is take a command line like:
 
