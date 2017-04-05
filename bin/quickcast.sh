@@ -370,7 +370,7 @@ do_youtube ()
     else
 	VSIZE="-s ${OUT_W}x${OUT_H}"
     fi
-    let GOP=(VRATE*2)
+    let GOP=VRATE*2-2
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     if [ $AENCODE = "libfdk_aac" ]; then
