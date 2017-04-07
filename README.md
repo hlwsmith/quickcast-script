@@ -18,7 +18,7 @@ should really be checking out for that is
 
 Basically what this script does is take a command line like:
 
-`quickcast -g full -i 320x240 -m -p lr -S twitchcam`
+`./quickcast.sh -g full -i 320x240 -m -p lr -S twitchcam`
 
 And constructs and runs the actual ffmpeg command (something like):
 
@@ -35,6 +35,8 @@ you'll need:
   [this Compilation Guide](https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu).
   However this script _should_ work with most newer ffmpeg binaries
   packaged with your distro.
+
+- alsa and pulse audio for your audio server.
 
 - `xwininfo` (in the x11-utils package) which is used to get screen
   and window sizes and placements for screen capturing.
@@ -141,12 +143,11 @@ need that.
 - Allow for more configuration and us less hard-coding of values in the
   script. (Ongoing)
 
-- Make just webcam stream-able to Twitch since they allow all kinds of
-  content now, not only gamecasting.
+- Combine twitch and youtube modes, since they are essentially allow
+  the same kinds of content now (you can stream games to yourtune and
+  video cast to twitch). Instead just have options for where the
+  output is to be sent and if to save a local copy.
 
-- And make screencasting live stream-able to YouTube.com. 
-
-- Finish making this TODO list!
 
 ## The future
 
