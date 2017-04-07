@@ -346,7 +346,7 @@ do_camcap ()
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} \
-	"${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
+	"${OUTPUT}" 2>${SAVEDIR}/quickcast.log
 }
 
 do_youtube ()
@@ -394,7 +394,7 @@ do_youtube ()
     fi
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} -pix_fmt yuv420p -g ${GOP} \
-	${OUTFMT} "${TEEOUT}" 2>${SAVEDIR}/${NAME}.log
+	${OUTFMT} "${TEEOUT}" 2>${SAVEDIR}/quickcast.log
 }
 
 do_screencap ()
@@ -423,7 +423,7 @@ do_screencap ()
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
 	-filter:v "${FILTER}" \
 	${ACODEC} ${VCODEC} \
-	"${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
+	"${OUTPUT}" 2>${SAVEDIR}/quickcast.log
 }
 
 do_twitch ()
@@ -466,7 +466,7 @@ do_twitch ()
 	-filter:v "${FILTER}" \
 	${ACODEC} ${VCODEC} \
 	-force_key_frames "${KFRAMES}" -pix_fmt yuv420p -g $GOP \
-	-f flv "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
+	-f flv "${OUTPUT}" 2>${SAVEDIR}/quickcast.log
 }
 
 do_twitchcam ()
@@ -517,7 +517,7 @@ do_twitchcam ()
 	-filter_complex "${FILTER}" -map "[out]" -map 0:a \
 	${ACODEC} ${VCODEC} \
 	-force_key_frames "${KFRAMES}" -pix_fmt yuv420p -g $GOP \
-	-f flv "${OUTPUT}" 2>${SAVEDIR}/${NAME}.log
+	-f flv "${OUTPUT}" 2>${SAVEDIR}/quickcast.log
 }
 
 query_webcam ()
