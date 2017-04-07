@@ -1104,9 +1104,9 @@ case ${STREAM_TYPE} in
 	if [ "${CBR}" ] ; then
 	    BRATE="-b:v ${CBR}k -minrate ${CBR}k -maxrate ${CBR}k -bufsize ${CBR}k"
 	elif [ "${MAXRATE}" ] ; then
-	    BRATE="-maxrate ${MAXRATE}k -bufsize ${MAXRATE}k"
-	else
 	    BRATE="-maxrate ${MAXRATE}k -bufsize $((MAXRATE*2))k"
+	else
+	    BRATE="-maxrate ${BANDWIDTH}k -bufsize $((BANDWIDTH*2))k"
 	fi
 	;;&
     youtube)
