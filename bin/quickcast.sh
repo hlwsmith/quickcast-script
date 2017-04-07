@@ -105,6 +105,11 @@ the user for the needed information.
           Overrides the URL for streaming to YouTube or Twitch, otherwise
           the applicable one found in ${CONFIGFILE} is used.
           eg: -U rtmp://a.rtmp.youtube.com/live2
+      -T <x264_tune_setting>
+          Optional, possible values are: film, animation, grain,
+          stillimage, fastdecode, and zerolatency. Probably best to
+          just leave this unset unless you like experimenting or you
+          know whay you're doing.
       -v <v4l2_capture_device>
           If omitted ${WEBCAM} is used.
       -V
@@ -337,7 +342,7 @@ do_camcap ()
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k "
     # just letting the underlying ffmpeg decide on the framerate here
     #VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v ${VRATE}"
-    VCODEC="-c:v libx264 -r:v ${VRATE} -preset ${QUALITY} -qp 0"
+    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v ${VRATE}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} ${CAM} \
 	${ACODEC} ${VCODEC} \
@@ -378,7 +383,7 @@ do_youtube ()
     else
 	ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k "
     fi
-    VCODEC="-c:v libx264 ${VSIZE} -r:v ${VRATE} -preset ${QUALITY} ${BRATE}"
+    VCODEC="-c:v libx264 ${VSIZE} -preset ${QUALITY} ${TUNE} ${BRATE} -r:v ${VRATE} "
     OUTFMT="-f tee -map 0:a -map 1:v -flags +global_header"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     if [ "$TEST" ] ; then
@@ -402,7 +407,7 @@ do_screencap ()
     echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
-    echo "      Video: ${OUT_W}x${OUT_H} (${QUALITY})"
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     echo "       File: ${OUTFILE}"
     echo " --------------------- "
@@ -412,7 +417,7 @@ do_screencap ()
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} -qp 0 -r:v 15"
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} -qp 0 -r:v ${VRATE}"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
     OUTPUT="${SAVEDIR}/${OUTFILE}"
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
@@ -447,7 +452,7 @@ do_twitch ()
     MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} -crf 20 ${BRATE} -r:v ${VRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     FILTER="scale=w=${OUT_W}:h=${OUT_H}"
@@ -492,7 +497,7 @@ do_twitchcam ()
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} -crf 23 ${BRATE} -r:v ${VRATE}"
+    VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} ${BRATE} -r:v ${VRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
     # set up overlay filter
     MAIN="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]"
