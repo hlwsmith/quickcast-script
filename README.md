@@ -1,5 +1,13 @@
 # quickcast-script
 
+## Next version -- v0.9 roadmap, and status
+
+- Change mode options to 'stream', 'capture' and 'both'
+
+- support configuration presets
+
+## Introduction
+
 This is a bash shell script that helps with ffmpeg command line
 invocation. It can save a screencast to a file or make a livecast to
 YouTube.com or Twitch.tv. Very rough around the edges but perhaps the
@@ -7,16 +15,22 @@ source would be useful to others trying to figure out how to use
 ffmpeg to stream live content.
 
 
-## Why This
+## But Why?
+
+Beside wanting to get better at writing bash scripts while solving the
+need (I imagine) I have to stream LIVE to Youtube or Twitch simply (I
+failed at getting OBS to work was over two years ago) none, check out
+the OBS project ( [obs-studio](https://github.com/jp9000/obs-studio) )
 
 I would use [Kazam](http://launchpad.net/kazam) for screencasts but
 there's no way to adjust the microphone settings. It seems stuck on
 44.1 khz (oh, and the 90's called and wanted their sample rate back!)
-Also this can stream live to YouTube or Twitch. Of course what you
-should really be checking out for that is
+Also this can stream live to YouTube or Twitch (which wasn't in
+Kazam's wheelhouse last I checked). Of course what you should really
+be checking out for that is
 [obs-studio](https://github.com/jp9000/obs-studio).
 
-Basically what this script does is take a command line like:
+Basically, what this script does is take a command line like:
 
 `./quickcast.sh -g full -i 320x240 -m -p lr -S twitchcam`
 
