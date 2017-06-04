@@ -2,7 +2,9 @@
 
 ## Version 0.9: roadmap
 
-- Change mode options to 'stream', 'capture' and 'both'
+- Change the way the 'mode' is selected
+  - Have output mode options: 'stream', 'capture'
+  - Have input mode options: 'webcam', 'screengrab'
 
 - Support configuration presets
 
