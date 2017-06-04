@@ -1,10 +1,12 @@
 # quickcast-script
 
-## Next version -- v0.9 roadmap, and status
+## Version 0.9: roadmap
 
 - Change mode options to 'stream', 'capture' and 'both'
 
-- support configuration presets
+- Support configuration presets
+
+- Pass configuration via environment variables
 
 ## Introduction
 
@@ -18,9 +20,10 @@ ffmpeg to stream live content.
 ## But Why?
 
 Beside wanting to get better at writing bash scripts while solving the
-need (I imagine) I have to stream LIVE to Youtube or Twitch simply (I
-failed at getting OBS to work was over two years ago) none, check out
-the OBS project ( [obs-studio](https://github.com/jp9000/obs-studio) )
+need (I imagine) to stream LIVE to Youtube or Twitch, there is
+none. Check out the OBS project (
+[obs-studio](https://github.com/jp9000/obs-studio) ) if you haven't
+yet.
 
 I would use [Kazam](http://launchpad.net/kazam) for screencasts but
 there's no way to adjust the microphone settings. It seems stuck on
