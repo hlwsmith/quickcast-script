@@ -402,7 +402,7 @@ do_screencap ()
     NAME="screencap"
     GRABAREA="${GRAB_W}x${GRAB_H}"
     GRABXY="${GRAB_X},${GRAB_Y}"
-    OUTFILE="${NAME}_${DATE}.mkv"
+    OUTFILE="${NAME}_${DATE}.avi"
     echo "  Using stream setup ${NAME}."
     echo
     echo " --- Settings -------- "
