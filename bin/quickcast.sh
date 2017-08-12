@@ -1080,7 +1080,9 @@ case ${STREAM_TYPE} in
 	if [ "${OUTSIZE}" ] ; then
 	    set_outsize $OUTSIZE
 	else
-	    query_outsize_screen
+	    if [ ! "${SKIP}" ] ; then
+		query_outsize_screen
+	    fi
 	fi
 	get_grabarea
 	if [ ! "$OUTSIZE" ] ; then
