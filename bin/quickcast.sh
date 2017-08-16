@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.9.0"
+VERSION="0.8.3"
 CONFIGFILE="${HOME}/.quickcast"
 DATE=$(date +%Y-%m-%d_%H%M%S)
 
