@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME="quickcast.sh"
-VERSION="0.8.1"
+VERSION="0.8.3"
 CONFIGFILE="${HOME}/.quickcast"
 DATE=$(date +%Y-%m-%d_%H%M%S)
 
@@ -15,6 +15,15 @@ the user for the needed information.
   Options:
       -h
           Output this help
+      -a <primary audio input source device>
+          ex: -a alsa_input.usb-ZOOM_Corporation_H2-00-H2.analog-stereo
+          set default in the config file to be used if omitted
+      -A <auxiliary audio input device>
+          (Likely the headphones monitor, use headphones to not get mic echo)
+          you can set a default in the config file and then just use T here
+          to use that default
+          ex: -A bluez_sink.1C_52_16_24_AF_53.monitor
+          or: -A T
       -b <Audio bitrate>
           The bitrate for the audio encoder in kbps.
           The default is 48*<number of channels> for Twitch streams
@@ -28,6 +37,8 @@ the user for the needed information.
           gravitate toward this setting. Normally one just needs to
           set the maxrate setting, (See -M). This setting overides the
           -M setting.
+      -F <audio input format>
+          most likely alsa or pulse. Set default in the config file.
       -g <screen-capture-dimensions>
           Sets the screen grab capture dimensions of the form
           WIDTHxHEIGHT If omitted it is selected interactively via
@@ -330,14 +341,14 @@ do_camcap ()
     echo
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam "
-    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (encode: ${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
     echo " -- Type q to quit.-- "
-    MIC="-f alsa -ar ${SAMPLES} -i pulse"
+    MIC="-f $AF -ar ${SAMPLES} -i $A1"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k "
     # just letting the underlying ffmpeg decide on the framerate here
@@ -357,7 +368,7 @@ do_youtube ()
     echo
     echo " --- Settings -------- "
     echo "        Cam: ${CAM_W}x${CAM_H} webcam"
-    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (encode: ${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then
 	echo "Saving to test stream file: "
@@ -376,7 +387,7 @@ do_youtube ()
 	VSIZE="-s ${OUT_W}x${OUT_H}"
     fi
     let GOP=VRATE*2-2
-    MIC="-f alsa -ar ${SAMPLES} -i pulse"
+    MIC="-f $AF -ar ${SAMPLES} -i $A1"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     if [ $AENCODE = "libfdk_aac" ]; then
 	ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k -bsf:a aac_adtstoasc"
@@ -407,21 +418,42 @@ do_screencap ()
     echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
-    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (encode: ${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     echo "       File: ${OUTFILE}"
     echo " --------------------- "
     echo
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
-    MIC="-f alsa -ar ${SAMPLES} -i pulse"
+    MIC="$TQS -f $AF -ar ${SAMPLES} -i $A1"
+    if [ $A2 ]; then
+	MIC="$MIC $TQS -f $AF -ar ${SAMPLES} -i $A2"
+	AFLTR="amix=inputs=2"
+	VN=2
+    else
+	AFLTR="anull"
+	VN=1
+    fi
+    if [ "${OUT_W}x${OUT_H}" = "${GRABAREA}" ]; then
+	echo "${OUT_W}x${OUT_H} = ${GRABAREA}"
+	VFLTR="[${VN}:v]null[out]"
+    else
+	VFLTR="[${VN}:v]scale=${OUT_W}x${OUT_H}[out]"
+    fi
+    FILTER="${AFLTR}; ${VFLTR}"    
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
-    VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} -qp 0 -r:v ${VRATE}"
-    FILTER="scale=w=${OUT_W}:h=${OUT_H}"
+    # It is working better (ie. less "Past duration 0.xxxxx too large"
+    # msgs) leaving -r:v ${VRATE} off then using "30" for $VRATE even
+    # though 30 is the what ffmepg uses here by default (on my system
+    # at least).
+    if [ "$VRATE" = "default-" ]
+    then VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} "
+    else VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} -r:v ${VRATE}"
+    fi
     OUTPUT="${SAVEDIR}/${OUTFILE}"
-    $FFMPEG ${MIC} -f x11grab ${SCREEN} \
-	-filter:v "${FILTER}" \
+    $FFMPEG ${MIC} $TQS -f x11grab ${SCREEN} \
+	-filter_complex "${FILTER}" -map "[out]" -map 0:a \
 	${ACODEC} ${VCODEC} \
 	"${OUTPUT}" 2>${SAVEDIR}/quickcast.log
 }
@@ -435,7 +467,7 @@ do_twitch ()
     echo
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
-    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (encode: ${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then
 	echo "Saving to test stream file: "
@@ -449,13 +481,22 @@ do_twitch ()
     echo " -- Type q + enter to quit. --"
     # An effort to not go over 2 sec keyframes
     let GOP=VRATE*2-2
-    MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
     VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} ${BRATE} -r:v ${VRATE}"
     # KFRAMES is another attempt to keep key intervals at 2 seconds
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
-    FILTER="scale=w=${OUT_W}:h=${OUT_H}"
+    MIC="-f $AF -ar ${SAMPLES} -i $A1"
+    if [ $A2 ]; then
+	MIC="$MIC -f $AF -ar ${SAMPLES} -i $A2"
+	AFLTR="amix=inputs=2"
+	VN=2
+    else
+	AFLTR="anull"
+	VN=1
+    fi
+    VFLTR="[${VN}:v]scale=${OUT_W}x${OUT_H} [out]"
+    FILTER="${AFLTR}; ${VFLTR}"
     if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
 	echo "Saving to test stream file: ${OUTPUT}"
@@ -463,7 +504,7 @@ do_twitch ()
 	OUTPUT="${URL}/${KEY}"
     fi
     $FFMPEG ${MIC} -f x11grab ${SCREEN} \
-	-filter:v "${FILTER}" \
+	-filter_complex "${FILTER}" -map "[out]" -map 0:a \
 	${ACODEC} ${VCODEC} \
 	-force_key_frames "${KFRAMES}" -pix_fmt yuv420p -g $GOP \
 	-f flv "${OUTPUT}" 2>${SAVEDIR}/quickcast.log
@@ -479,7 +520,7 @@ do_twitchcam ()
     echo " --- Settings -------- "
     echo "     Screen: ${GRABAREA} at ${GRABXY} "
     echo " webcam-out: ${CAMO_W}x${CAMO_H} ${MATCHSCALE} inset ${CORNER}."
-    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (${QUALITY})"
+    echo "      Video: ${OUT_W}x${OUT_H} at ${VRATE}fps (encode: ${QUALITY})"
     echo "      Audio: ${AC} channel(s) at ${SAMPLES} to ${AB}kbps"
     if [ "$TEST" ] ; then
 	echo "Saving to test stream file: "
@@ -493,20 +534,31 @@ do_twitchcam ()
     read -p "Hit any key to continue."
     echo " -- Type q + enter to quit. --"
     let GOP=VRATE*2-2
-    MIC="-f alsa -ar ${SAMPLES} -i pulse"
     SCREEN="-video_size ${GRABAREA} -i :0.0+${GRABXY}"
     CAM="-f v4l2 -video_size ${CAM_W}x${CAM_H} -i ${WEBCAM}"
     ACODEC="-c:a $AENCODE -ac ${AC} -ab ${AB}k"
     VCODEC="-c:v libx264 -preset ${QUALITY} ${TUNE} ${BRATE} -r:v ${VRATE}"
     KFRAMES="expr:if(isnan(prev_forced_t),gte(t,2),gte(t,prev_forced_t+2))"
-    # set up overlay filter
-    MAIN="[1:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]"
-    if [ "${MATCHSCALE}" = scaled ]
-    then INSET="[2:v]scale=${CAMO_W}x${CAMO_H},setpts=PTS-STARTPTS[fg]"
-    else INSET="[2:v]setpts=PTS-STARTPTS[fg]"
+    MIC="-f $AF -ar ${SAMPLES} -i $A1"
+    if [ $A2 ]; then
+	MIC="$MIC -f $AF -ar ${SAMPLES} -i $A2"
+	AFLTR="amix=inputs=2"
+	VN1=2
+	VN2=3
+    else
+	AFLTR="anull"
+	VN1=1
+	VN2=2
     fi
+    # set up the video overlay filter
+    MAIN="[${VN1}:v]scale=${OUT_W}x${OUT_H},setpts=PTS-STARTPTS[bg]"
+    if [ "${MATCHSCALE}" = scaled ]
+    then INSET="[${VN2}:v]scale=${CAMO_W}x${CAMO_H},setpts=PTS-STARTPTS[fg]"
+    else INSET="[${VN2}:v]setpts=PTS-STARTPTS[fg]"
+    fi    
     OVERLAY="[bg][fg]overlay=${PLACEMENT},format=yuv420p[out]"
-    FILTER="${MAIN}; ${INSET}; ${OVERLAY}"
+    VFLTR="${MAIN}; ${INSET}; ${OVERLAY}"
+    FILTER="${AFLTR}; ${VFLTR}"
     if [ "$TEST" ] ; then
 	OUTPUT="${SAVEDIR}/test_${NAME}.f4v"
 	echo "Saving to test stream file: ${OUTPUT}"
@@ -812,7 +864,20 @@ YOUTUBEKEY=\$(printenv YOUTUBE_KEY)
 FFMPEG="ffmpeg -y -loglevel info"
 #FFMPEG="/usr/bin/ffmpeg -y -loglevel info"
 
-# Tou probably have more uplink then me and should raise this number,
+# the thread_queue_size option to ffmpeg,
+# leave empty to take ffmpeg default
+THREAD_QUEUE_SIZE=
+
+# Audio device format (alsa or pulse)
+AF=alsa
+# Primary audio source. If you use pulse but your ffmpeg was not build
+# with libpulse you can use alsa as format and set pulse here as the
+# alsa device then it will use whatever the default pulse device is 
+A1=pulse
+# Auxiliary audio source (for music/game sounds etc.)
+A2=""
+
+# You probably have more uplink and should raise this number,
 # it's in kilobits/sec
 BANDWIDTH="650"
 
@@ -863,6 +928,11 @@ check_config() {
 	echo -e "Please set a valid SAVEDIR in your config file:\n ${CONFIGFILE}"
 	exit 1
     fi
+    # -thread_queue_size option
+    if [ $THREAD_QUEUE_SIZE ]
+    then TQS="-thread_queue_size $THREAD_QUEUE_SIZE"; echo "$TQS"
+    else TQS=
+    fi
 }
 
 check_dialog() {
@@ -888,6 +958,8 @@ ROOTSCRN=$(xwininfo -root | awk '/-geo/{print $2}' | sed 's|\([0-9]*\)x\([0-9]*\
 get_windowinfo ${ROOTSCRN}
 ROOTW=$THIS_W
 ROOTH=$THIS_H
+# Auxiliary audio
+A2=""
 
 STREAM_TYPES="camcap youtube screencap twitch twitchcam"
 declare -A STREAM_DESCS
@@ -900,7 +972,7 @@ STREAM_DESCS[twitchcam]=" - Same as 'twitch' with cam inset at lower left."
 check_config
 
 # why can't I put this option parsing into a fucntion?
-while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStT:U:v:x:y:" opt; do
+while getopts ":Vha:A:b:c:C:F:g:i:K:mM:o:p:Q:r:R:sStT:U:v:x:y:" opt; do
     case $opt in
 	V)
 	    echo "${PROGNAME} ${VERSION}"
@@ -916,6 +988,16 @@ while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStT:U:v:x:y:" opt; do
 	    echo
 	    exit 0
 	    ;;
+	a)
+	    A1=$OPTARG
+	    ;;
+	A)
+	    if [ "$OPTARG" = "T" ]; then
+		A2=$AX
+	    else
+		A2=$OPTARG
+	    fi
+	    ;;
 	b)
 	    AB=$OPTARG
 	    ;;
@@ -924,6 +1006,9 @@ while getopts ":Vhb:c:C:f:g:i:K:mM:o:p:Q:r:R:sStT:U:v:x:y:" opt; do
 	    ;;
 	C)
 	    CBR=$OPTARG
+	    ;;
+	F)
+	    AF=$OPTARG
 	    ;;
 	g)
 	    if [ "$OPTARG" = "full" ]; then
@@ -1080,7 +1165,9 @@ case ${STREAM_TYPE} in
 	if [ "${OUTSIZE}" ] ; then
 	    set_outsize $OUTSIZE
 	else
-	    query_outsize_screen
+	    if [ ! "${SKIP}" ] ; then
+		query_outsize_screen
+	    fi
 	fi
 	get_grabarea
 	if [ ! "$OUTSIZE" ] ; then
@@ -1091,7 +1178,10 @@ case ${STREAM_TYPE} in
 	    set_scale $OUT_H $GRAB_W $GRAB_H
 	    OUT_W=$NEW_W
 	fi
-	VRATE=30
+	if [ ! "$FRATE" ]
+	then VRATE="default-"
+	else VRATE="$FRATE"
+	fi
 	if [ ! "${SKIP}" ] ; then
 	    query_options_local
 	fi
